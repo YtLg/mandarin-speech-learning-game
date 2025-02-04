@@ -7,7 +7,7 @@ public class NPCToggleCanvas : MonoBehaviour
     public GameObject canvas;
     public DialogueManager dialogueManager;
     public DialogueElementsScript npcDialogueElements;
-    public Vector3 offset = new(0f, 2f, 0f);
+    public Vector3 offset = new(0f, 0f, 0f);
 
 
     // Update is called once per frame

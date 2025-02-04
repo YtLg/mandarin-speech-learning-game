@@ -15,12 +15,12 @@ MonoBehaviour:
   npcName: NPC2
   dialogueElementList:
   - englishText: Goodbye!
-    pinyinText: Zaijian
-    chineseText: TEST
+    pinyinText: "Z\xE0iji\xE0n"
+    chineseText: "\u518D\u89C1"
     hasChoice: 0
     choices: []
     nextElementID: 01000000
-  - englishText: ' Goodbye 2!'
+  - englishText: ' Goodbye (2)!'
     pinyinText: Zaijian
     chineseText: TEST
     hasChoice: 0

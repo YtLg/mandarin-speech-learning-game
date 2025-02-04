@@ -7,6 +7,7 @@ using UnityEngine;
         public string npcName; // Name of the NPC, only one per file since it shouldn't change.
         public List<DialogueElementList> dialogueElementList; // Creates a list in the inspector called Dialogue elements
 
+        [System.Serializable]
         public class ChoiceElement
         {
             public string englishChoice;
@@ -21,10 +22,8 @@ using UnityEngine;
             public string pinyinText;            // Pinyin
             public string chineseText;           // Chinese
             public bool hasChoice;               // If the dialogue has choices
-            public List<string> choices;         // List of choices
+            public List<ChoiceElement> choices;         // List of choices
             public List<int> nextElementID;    // Indices of next dialogue nodes
-        } // So whenever someone adds a new dialogue line, it will have all the relevant information for the manager to use to integrate logic.
-        
-        
+        } // So whenever someone adds a new dialogue line, it will have all the relevant information for the manager to use to integrate logic.    
         
     }
