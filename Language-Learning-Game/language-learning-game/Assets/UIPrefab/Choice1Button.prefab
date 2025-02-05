@@ -134,6 +134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfcfafb85953e9b43830ea9ce17309d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  textComponent: {fileID: 0}
   englishText: 
   pinyinText: 
   chineseText: 
@@ -236,7 +237,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535

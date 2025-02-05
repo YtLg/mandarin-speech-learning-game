@@ -2,20 +2,22 @@ using TMPro;
 using UnityEngine;
 using System.Collections.Generic; // needed for list DON'T DELETE
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 
 public class DialogueManager : MonoBehaviour
 {
-    // DIALOGUE ELEMENTS //
+    public Transform playerTransform;
+
+    // DIALOGUE CANVAS PANELS //
     public GameObject dialogueCanvas;
     public GameObject dialoguePanel;
     public GameObject choicePanel;
+    public GameObject speechInputPanel;
 
-    public Transform playerTransform;
-
+    // DIALOGUE ELEMENTS //
     private TextMeshProUGUI speakerNameText;
     private TextMeshProUGUI dialogueText;
-
     public Button continueButton;
     private Button exitButton;
 
@@ -24,12 +26,20 @@ public class DialogueManager : MonoBehaviour
     private DialogueElementsScript.DialogueElementList currentDialogueLine;
     private int currentElementIndex;
 
-
-    // CHOICE DATA STORE //
+    // CHOICE ELEMENTS + DATA //
     public GameObject choiceButtonPrefab;
     private List<GameObject> choiceButtonList = new List<GameObject>();
 
+    // SPEECH INPUT ELEMENTS + DATA //
+    public Button SpeechInputButton;
+    private TextMeshProUGUI SpeechInputText;
+    public Button SpeechInputExitButton;
+    public Button SpeechInputTranslateButton;
+    public Button SpeechInputRepeatButton;
+    ButtonDataScript selectedChoiceData;
+
     int currentLanguageID; // 0 = English | 1 = PinYin | 2 = Chinese
+    
 
 
     // ---- initial setup --- //
@@ -39,13 +49,18 @@ public class DialogueManager : MonoBehaviour
         // Set up dialogue text values
         speakerNameText = dialoguePanel.transform.Find("Name").GetComponent<TextMeshProUGUI>();
         dialogueText = dialoguePanel.transform.Find("Dialogue").GetComponent<TextMeshProUGUI>();
+        SpeechInputText = speechInputPanel.transform.Find("ChoiceText").GetComponent<TextMeshProUGUI>();
     }
 
     public void ShowCanvas(Transform npcTransform, Vector3 offset, DialogueElementsScript dialogueElements)
     {
         currentLanguageID = 0;
-        dialogueCanvas.SetActive(true); // Show the canvas
         currentElementIndex = 0; // Start at 0
+
+        speechInputPanel.SetActive(false);
+        choicePanel.SetActive(false);
+        dialogueCanvas.SetActive(true); // Show the canvas
+
         currentDialogue = dialogueElements; // Pass it to a global variable
         currentDialogueLine = currentDialogue.dialogueElementList[currentElementIndex]; // Store the current dialogue element
 
@@ -78,7 +93,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         speakerNameText.text = currentDialogue.name;
-        ChangeDialogueLanguage(currentLanguageID);
+        ChangeDialogueText(currentLanguageID);
     }
 
     // Sets up the panel to display choice buttons when valid
@@ -127,11 +142,14 @@ public class DialogueManager : MonoBehaviour
         DisplayDialogue(); //then display it.
     }
 
-    public void ChoiceSelected() // same reasoning as before for public.
+    public void ChoiceSelected(GameObject clickedButton) // same reasoning as before for public. // For when a choice button is clicked.
     {
-        // Move onto the next dialogue. (For now.)
-
-        // Maybe add clearning the choice buttons here?
+        selectedChoiceData = clickedButton.GetComponent<ButtonDataScript>();
+        Debug.Log(selectedChoiceData.englishText);
+        SpeechInputText.text = selectedChoiceData.englishText;
+        choicePanel.SetActive(false);
+        dialoguePanel.SetActive(false);
+        speechInputPanel.SetActive(true);        
     }
 
     public void TranslateButtonPressed()
@@ -145,7 +163,7 @@ public class DialogueManager : MonoBehaviour
             currentLanguageID += 1; // otherwise it just increments.
         }
 
-        ChangeDialogueLanguage(currentLanguageID);
+        ChangeDialogueText(currentLanguageID);
 
         if (currentDialogueLine.hasChoice)
         {
@@ -164,8 +182,10 @@ public class DialogueManager : MonoBehaviour
 
     public void EndDialogue()
     {
+        // reset visibilty of everything.
         dialogueCanvas.SetActive(false);
         dialoguePanel.SetActive(false);
+        speechInputPanel.SetActive(false);
         currentDialogue = null;
     }
 
@@ -174,7 +194,7 @@ public class DialogueManager : MonoBehaviour
 
     // UTILITY FUNCTIONS // 
 
-    public void ChangeDialogueLanguage(int langID)
+    public void ChangeDialogueText(int langID)
     {
         if (langID == 0)
         {
