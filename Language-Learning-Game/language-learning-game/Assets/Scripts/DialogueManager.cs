@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic; // needed for list DON'T DELETE
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Text.RegularExpressions;
 
 
 public class DialogueManager : MonoBehaviour
@@ -36,11 +37,11 @@ public class DialogueManager : MonoBehaviour
     public Button SpeechInputExitButton;
     public Button SpeechInputTranslateButton;
     public Button SpeechInputRepeatButton;
-    ButtonDataScript selectedChoiceData;
+    private ButtonDataScript selectedChoiceData;
+
+    public SpeechManager dialogueManager;
 
     int currentLanguageID; // 0 = English | 1 = PinYin | 2 = Chinese
-    
-
 
     // ---- initial setup --- //
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -49,7 +50,7 @@ public class DialogueManager : MonoBehaviour
         // Set up dialogue text values
         speakerNameText = dialoguePanel.transform.Find("Name").GetComponent<TextMeshProUGUI>();
         dialogueText = dialoguePanel.transform.Find("Dialogue").GetComponent<TextMeshProUGUI>();
-        SpeechInputText = speechInputPanel.transform.Find("ChoiceText").GetComponent<TextMeshProUGUI>();
+        SpeechInputText = speechInputPanel.transform.Find("SpeechInputText").GetComponent<TextMeshProUGUI>();
     }
 
     public void ShowCanvas(Transform npcTransform, Vector3 offset, DialogueElementsScript dialogueElements)
@@ -146,7 +147,8 @@ public class DialogueManager : MonoBehaviour
     {
         selectedChoiceData = clickedButton.GetComponent<ButtonDataScript>();
         Debug.Log(selectedChoiceData.englishText);
-        SpeechInputText.text = selectedChoiceData.englishText;
+        string compound = "You need to say: " + selectedChoiceData.englishText;
+        SpeechInputText.text = compound;
         choicePanel.SetActive(false);
         dialoguePanel.SetActive(false);
         speechInputPanel.SetActive(true);        
@@ -177,6 +179,19 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
+    public void RecordingFinished(string transcript)
+    {
+        Debug.Log(CleanText(transcript));
+        Debug.Log(CleanText(selectedChoiceData.englishText));
+        if (CleanText(transcript) == CleanText(selectedChoiceData.englishText))
+        {
+            SpeechInputText.color = Color.green;
+        }
+        else
+        {
+            SpeechInputText.color= Color.red;
+        }
+    }
 
     // ------------------------ END DIALOGUE ---------------------- //
 
@@ -208,6 +223,12 @@ public class DialogueManager : MonoBehaviour
             dialogueText.text = currentDialogueLine.chineseText;
         }
 
+    }
+
+    public string CleanText(string text)
+    {
+        // Remove punctuation, make the text lowercase, and remove spaces
+        return Regex.Replace(text.ToLower(), @"[^\w]", "");
     }
 
 }
