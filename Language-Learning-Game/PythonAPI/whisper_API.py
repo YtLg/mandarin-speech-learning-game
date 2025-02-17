@@ -1,13 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
+import uvicorn
 
 import whisper
-import io
-import torchaudio
-
-import numpy as np
-from pydub import AudioSegment
-from scipy.io.wavfile import write
 
 model = whisper.load_model("small")
 app = FastAPI()
@@ -43,3 +38,7 @@ def whisperTranscribe(audioFile):
     }
     print(transcriptionResult)
     return transcriptionResult
+
+
+if __name__ == "__main__":
+    uvicorn.run("whisper_API:app", host="0.0.0.0", port=8000, reload=True)
