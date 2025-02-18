@@ -5,16 +5,19 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
 
-
+/// <summary>
+/// This script will manage the Dialogue + dialogue logic
+/// As well as the showing and hiding of choice panels.
+/// And communicating with the speechPanel when a choice is selected.
+/// </summary>
 public class DialogueManager : MonoBehaviour
 {
     public Transform playerTransform;
 
     // DIALOGUE CANVAS PANELS //
-    public GameObject dialogueCanvas;
+    public GameObject canvas;
     public GameObject dialoguePanel;
     public GameObject choicePanel;
-    public GameObject speechInputPanel;
 
     // DIALOGUE ELEMENTS //
     private TextMeshProUGUI speakerNameText;
@@ -30,16 +33,8 @@ public class DialogueManager : MonoBehaviour
     // CHOICE ELEMENTS + DATA //
     public GameObject choiceButtonPrefab;
     private List<GameObject> choiceButtonList = new List<GameObject>();
-
-    // SPEECH INPUT ELEMENTS + DATA //
-    public Button SpeechInputButton;
-    private TextMeshProUGUI SpeechInputText;
-    public Button SpeechInputExitButton;
-    public Button SpeechInputTranslateButton;
-    public Button SpeechInputRepeatButton;
-    private ButtonDataScript selectedChoiceData;
-
-    public SpeechManager dialogueManager;
+    private ButtonDataScript selectedChoiceData; // Data of the button pressed is stored here.
+    public SpeechPanelManager speechPanelManager;
 
     int currentLanguageID; // 0 = English | 1 = PinYin | 2 = Chinese
 
@@ -50,35 +45,42 @@ public class DialogueManager : MonoBehaviour
         // Set up dialogue text values
         speakerNameText = dialoguePanel.transform.Find("Name").GetComponent<TextMeshProUGUI>();
         dialogueText = dialoguePanel.transform.Find("Dialogue").GetComponent<TextMeshProUGUI>();
-        SpeechInputText = speechInputPanel.transform.Find("SpeechInputText").GetComponent<TextMeshProUGUI>();
     }
 
+    // This will be called to position the canvas at the correct location relative to the npc and the player, then call DisplayDialogue to set up and display the dialogue box.
     public void ShowCanvas(Transform npcTransform, Vector3 offset, DialogueElementsScript dialogueElements)
     {
         currentLanguageID = 0;
         currentElementIndex = 0; // Start at 0
 
-        speechInputPanel.SetActive(false);
         choicePanel.SetActive(false);
-        dialogueCanvas.SetActive(true); // Show the canvas
+        canvas.SetActive(true); // Show the canvas
 
         currentDialogue = dialogueElements; // Pass it to a global variable
         currentDialogueLine = currentDialogue.dialogueElementList[currentElementIndex]; // Store the current dialogue element
+
+        //Vector3 halfWayVector = (npcTransform.position + playerTransform.position).normalized;
+        //float temp = halfWayVector.y;
+        //halfWayVector.y = halfWayVector.x;
+        //halfWayVector.x = temp;
+        //canvas.transform.position = halfWayVector;
 
         // Calculate the canvas position to the left of the NPC relative to the player's perspective
         Vector3 directionToNPC = npcTransform.position - playerTransform.position;
         directionToNPC.y = 0; // Ignore vertical difference (optional, depending on your game)
         directionToNPC.Normalize();
 
-        // Calculate the left direction relative to the player's perspective
+        //// Calculate the left direction relative to the player's perspective
         Vector3 leftDirection = -Vector3.Cross(directionToNPC, Vector3.up).normalized;
 
-        // Set the canvas position
-        dialogueCanvas.transform.position = npcTransform.position + leftDirection * offset.magnitude + offset;
+        //// Set the canvas position
+        canvas.transform.position = npcTransform.position + leftDirection * offset.magnitude;
 
         DisplayDialogue();
     }
 
+
+    // This will display the dialogue box and set up intial information. Dialogue lines + choices when applicable.
     private void DisplayDialogue()
     {
         dialoguePanel.SetActive(true);
@@ -97,7 +99,7 @@ public class DialogueManager : MonoBehaviour
         ChangeDialogueText(currentLanguageID);
     }
 
-    // Sets up the panel to display choice buttons when valid
+    // Sets up the panel to display choice buttons when applicable. Also passes in relevant data into those buttons.
     private void SetupChoicePanel()
     {
         choiceButtonList.Clear();// clear the list of buttons.
@@ -108,13 +110,13 @@ public class DialogueManager : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        // Generate the buttons
+        // Generate the buttons and passes in related button information (text, etc.)
         for (int i = 0; i < currentDialogueLine.choices.Count; i++)
         {
             DialogueElementsScript.ChoiceElement choice = currentDialogueLine.choices[i];
             GameObject button = Instantiate(choiceButtonPrefab, choicePanel.transform);
             
-            ButtonDataScript buttonDataScript = button.GetComponent<ButtonDataScript>();
+            ButtonDataScript buttonDataScript = button.GetComponent<ButtonDataScript>(); // Button data script is a component within each prefab button that will data related to that button.
 
             buttonDataScript.textComponent = button.GetComponentInChildren<TextMeshProUGUI>();
             buttonDataScript.englishText = choice.englishChoice;
@@ -133,6 +135,7 @@ public class DialogueManager : MonoBehaviour
     // ------------------------- BUTTON PRESS LISTENERS ------------------------------ //
     public void ContinueButtonPressed() // public to be accessible by button assignment in inspector
     {
+        canvas.SetActive(true);
         if (currentDialogue == null || currentDialogueLine.nextElementID.Count == 0) // if there is no dialogue and the continue button is pressed, then end it.
         {
             EndDialogue();
@@ -145,13 +148,9 @@ public class DialogueManager : MonoBehaviour
 
     public void ChoiceSelected(GameObject clickedButton) // same reasoning as before for public. // For when a choice button is clicked.
     {
-        selectedChoiceData = clickedButton.GetComponent<ButtonDataScript>();
-        Debug.Log(selectedChoiceData.englishText);
-        string compound = "You need to say: " + selectedChoiceData.englishText;
-        SpeechInputText.text = compound;
-        choicePanel.SetActive(false);
+        speechPanelManager.displaySpeechPanel(clickedButton.GetComponent<ButtonDataScript>());
         dialoguePanel.SetActive(false);
-        speechInputPanel.SetActive(true);        
+        choicePanel.SetActive(false);
     }
 
     public void TranslateButtonPressed()
@@ -179,28 +178,13 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
-    public void RecordingFinished(string transcript)
-    {
-        Debug.Log(CleanText(transcript));
-        Debug.Log(CleanText(selectedChoiceData.englishText));
-        if (CleanText(transcript) == CleanText(selectedChoiceData.englishText))
-        {
-            SpeechInputText.color = Color.green;
-        }
-        else
-        {
-            SpeechInputText.color= Color.red;
-        }
-    }
-
     // ------------------------ END DIALOGUE ---------------------- //
 
     public void EndDialogue()
     {
         // reset visibilty of everything.
-        dialogueCanvas.SetActive(false);
+        canvas.SetActive(false);
         dialoguePanel.SetActive(false);
-        speechInputPanel.SetActive(false);
         currentDialogue = null;
     }
 
@@ -223,12 +207,6 @@ public class DialogueManager : MonoBehaviour
             dialogueText.text = currentDialogueLine.chineseText;
         }
 
-    }
-
-    public string CleanText(string text)
-    {
-        // Remove punctuation, make the text lowercase, and remove spaces
-        return Regex.Replace(text.ToLower(), @"[^\w]", "");
     }
 
 }

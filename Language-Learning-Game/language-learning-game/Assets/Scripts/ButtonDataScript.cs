@@ -22,9 +22,9 @@ public class ButtonDataScript : MonoBehaviour
 
     public void ChangeDisplayText(int languageID)
     {
-        Debug.Log("IN CHANGE DISPLAY TEXT--------------------------------------");
-        Debug.Log(textComponent.text);
-        Debug.Log(languageID);
+        //Debug.Log("IN CHANGE DISPLAY TEXT--------------------------------------");
+        //Debug.Log(textComponent.text);
+        //Debug.Log(languageID);
         if (languageID == 0)
         {
             textComponent.text = englishText;
