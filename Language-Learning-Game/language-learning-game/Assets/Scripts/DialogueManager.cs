@@ -2,8 +2,6 @@ using TMPro;
 using UnityEngine;
 using System.Collections.Generic; // needed for list DON'T DELETE
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Text.RegularExpressions;
 
 /// <summary>
 /// This script will manage the Dialogue + dialogue logic
@@ -14,23 +12,29 @@ public class DialogueManager : MonoBehaviour
 {
     public Transform playerTransform;
 
-    // DIALOGUE CANVAS PANELS //
+    //--- REFERENCE TO AUDIO MANAGER ---//
+    public AudioManager audioManager;
+
+    //--- DIALOGUE CANVAS PANELS ---//
     public GameObject canvas;
     public GameObject dialoguePanel;
     public GameObject choicePanel;
 
-    // DIALOGUE ELEMENTS //
+    //--- DIALOGUE ELEMENTS ---//
     private TextMeshProUGUI speakerNameText;
     private TextMeshProUGUI dialogueText;
+
+    //--- INTERACTABLE BUTTONS ---//
     public Button continueButton;
     private Button exitButton;
+    public Button replayButton;
 
-    // DIALOGUE DATA STORE //
+    //--- DIALOGUE DATA STORE ---//
     private DialogueElementsScript currentDialogue;
     private DialogueElementsScript.DialogueElementList currentDialogueLine;
     private int currentElementIndex;
 
-    // CHOICE ELEMENTS + DATA //
+    //--- CHOICE ELEMENTS + DATA ---//
     public GameObject choiceButtonPrefab;
     private List<GameObject> choiceButtonList = new List<GameObject>();
     private ButtonDataScript selectedChoiceData; // Data of the button pressed is stored here.
@@ -38,13 +42,21 @@ public class DialogueManager : MonoBehaviour
 
     int currentLanguageID; // 0 = English | 1 = PinYin | 2 = Chinese
 
-    // ---- initial setup --- //
+    // ---- INITIAL SETUP & DISPLAY FUNCTIONS--- //
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
     {
+        dialoguePanel.SetActive(false);
+        choicePanel.SetActive(false);
         // Set up dialogue text values
         speakerNameText = dialoguePanel.transform.Find("Name").GetComponent<TextMeshProUGUI>();
         dialogueText = dialoguePanel.transform.Find("Dialogue").GetComponent<TextMeshProUGUI>();
+
+
+        // Set up Button Listeners
+        replayButton.onClick.AddListener(ReplayButtonPressed);
+        continueButton.onClick.AddListener(ContinueButtonPressed);
+
     }
 
     // This will be called to position the canvas at the correct location relative to the npc and the player, then call DisplayDialogue to set up and display the dialogue box.
@@ -79,11 +91,11 @@ public class DialogueManager : MonoBehaviour
         DisplayDialogue();
     }
 
-
     // This will display the dialogue box and set up intial information. Dialogue lines + choices when applicable.
     private void DisplayDialogue()
     {
         dialoguePanel.SetActive(true);
+
        // If current dialogue has a choice, hide the continue button
        if (currentDialogueLine.hasChoice)
         {
@@ -97,6 +109,7 @@ public class DialogueManager : MonoBehaviour
 
         speakerNameText.text = currentDialogue.name;
         ChangeDialogueText(currentLanguageID);
+        audioManager.PlayDialogue(currentDialogueLine.dialogueAudio); // PLAYS SPEECH AUDIO.
     }
 
     // Sets up the panel to display choice buttons when applicable. Also passes in relevant data into those buttons.
@@ -122,6 +135,7 @@ public class DialogueManager : MonoBehaviour
             buttonDataScript.englishText = choice.englishChoice;
             buttonDataScript.pinyinText = choice.pinyinChoice;
             buttonDataScript.chineseText = choice.chineseChoice;
+            buttonDataScript.choiceAudio = choice.choiceAudio;
             buttonDataScript.nextNode = currentDialogueLine.nextElementID[i];
             buttonDataScript.ChangeDisplayText(currentLanguageID);
 
@@ -130,6 +144,8 @@ public class DialogueManager : MonoBehaviour
 
         choicePanel.SetActive(true); // show it.
     }
+
+
 
 
     // ------------------------- BUTTON PRESS LISTENERS ------------------------------ //
@@ -148,9 +164,9 @@ public class DialogueManager : MonoBehaviour
 
     public void ChoiceSelected(GameObject clickedButton) // same reasoning as before for public. // For when a choice button is clicked.
     {
-        speechPanelManager.displaySpeechPanel(clickedButton.GetComponent<ButtonDataScript>());
         dialoguePanel.SetActive(false);
         choicePanel.SetActive(false);
+        speechPanelManager.DisplaySpeechPanel(clickedButton.GetComponent<ButtonDataScript>());
     }
 
     public void TranslateButtonPressed()
@@ -177,6 +193,13 @@ public class DialogueManager : MonoBehaviour
             }
         }
     }
+
+    public void ReplayButtonPressed()
+    {
+        audioManager.PlayDialogue(currentDialogueLine.dialogueAudio);
+    }
+
+
 
     // ------------------------ END DIALOGUE ---------------------- //
 

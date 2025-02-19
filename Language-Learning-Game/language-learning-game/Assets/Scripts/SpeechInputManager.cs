@@ -7,14 +7,16 @@ using UnityEngine;
 
 public class SpeechInputManager : MonoBehaviour
 {
-    // ------ Data Store -----
+
+    //--- Data Store ---//
     public int maxRecLength = 10;
     private AudioClip recordedSpeech;
     private byte[] bytes;
+    private byte[] referenceBytes;
     [HideInInspector] public bool isRecording = false;
     private string result;
 
-    // ----- Other Components -----
+    //--- Other Components ---//
     public ApiManager apiManager;
 
     public void StartRecording() // Begins recording the default microphone.
@@ -23,20 +25,49 @@ public class SpeechInputManager : MonoBehaviour
         recordedSpeech = Microphone.Start(null, false, maxRecLength, 44100);
     }
 
-    async public Task<WhisperData> StopRecording() // Ends the recording and does post-recording processing.  
+    async public Task<(WhisperData, AudioClip)> StopRecording() // Ends the recording and does post-recording processing.  
     {
         Debug.Log("Ended!");
         isRecording = false;
         var position = Microphone.GetPosition(null);
         Microphone.End(null);
+
         var samples = new float[position * recordedSpeech.channels];
         recordedSpeech.GetData(samples, 0);
+
+        AudioClip audioClip = AudioClip.Create("recording", position, recordedSpeech.channels, recordedSpeech.frequency, false);
+        audioClip.SetData(samples, 0);
+
+
         bytes = WriteToWav(samples, recordedSpeech.frequency, recordedSpeech.channels);
 
         var result = await apiManager.SendAudio(bytes);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
 
         Debug.Log("Transription is:" + data.transcription);
+
+        foreach (WordData word in data.words)
+        {
+            Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
+        }
+
+        return (data, recordedSpeech);
+    }
+
+
+    // USED TO PROCESS THE REFERENCE SPEECH DATA AND GET A TRANSCRIPT BACK
+    async public Task<WhisperData> SendReferenceAudio(AudioClip audio)
+    {
+
+        float[] samples = new float[audio.samples * audio.channels];
+        audio.GetData(samples, 0);
+
+        byte[] wavData = WriteToWav(samples, audio.frequency, audio.channels);
+
+        var result = await apiManager.SendAudio(wavData);
+        WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
+
+        Debug.Log("Transcription is: " + data.transcription);
 
         foreach (WordData word in data.words)
         {

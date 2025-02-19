@@ -8,6 +8,7 @@ public class ButtonDataScript : MonoBehaviour
     public string englishText;
     public string pinyinText;
     public string chineseText;
+    public AudioClip choiceAudio;
     public int nextNode;
 
     private DialogueManager dialogueManager;

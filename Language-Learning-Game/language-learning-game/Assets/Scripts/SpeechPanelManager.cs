@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using TMPro;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +10,10 @@ public class SpeechPanelManager : MonoBehaviour
     /// It will also communicate with the dialogue manager to notify the end of speech input section.
     /// And call methods from SpeechInputManager for speech to text functionality.
     /// </summary>
- 
+
+    //--- Audio Player Reference ---//
+    public AudioManager audioManager;
+
     // ------ DATA ELEMENTS PASSED IN --------
     private ButtonDataScript selectedChoiceData;
 
@@ -37,51 +39,58 @@ public class SpeechPanelManager : MonoBehaviour
     {
         // Hides upon startup
         dialoguePanel.SetActive(false);
-        translateButton.onClick.AddListener(translateButtonPressed);
-        replayButton.onClick.AddListener(replayButtonPressed);
-        recordButton.onClick.AddListener(recordButtonPressed);
-       
+
+        // Setup button listeners
+        translateButton.onClick.AddListener(TranslateButtonPressed);
+        replayButton.onClick.AddListener(ReplayButtonPressed);
+        recordButton.onClick.AddListener(RecordButtonPressed);
+        replayButton.onClick.AddListener(ReplayButtonPressed);
+
     }
 
-    public void displaySpeechPanel(ButtonDataScript buttonData)
+    public void DisplaySpeechPanel(ButtonDataScript buttonData)
     {
         dialoguePanel.SetActive(true);
         selectedChoiceData = buttonData;
         displayText.text = selectedChoiceData.englishText;
+        audioManager.PlayDialogue(selectedChoiceData.choiceAudio);//PLAYS THE DIALOGUE OF AUDIO ATTACHED TO CHOICE BUTTON DATA
     }
 
-    public void showSpeechPanel()
+    public void ShowSpeechPanel()
     {
         dialoguePanel.SetActive(true);
     }
 
-    public void resetSpeechPanel()
+    public void ResetSpeechPanel()
     {
         // implementation to wipe and reset data.
     }
 
-    public void speechCompleted(WhisperData data)
+    public void SpeechCompleted(WhisperData transcriptData, AudioClip recordedSpeech, WhisperData referenceData)
     {
-        
+        outputPanelManager.SetupDisplayOutputPanel(transcriptData, recordedSpeech, referenceData, selectedChoiceData.choiceAudio);
+        dialoguePanel.SetActive(false);
     }
 
 
     // ---- Button Press Listeners ----
 
-    async void recordButtonPressed()
+    async void RecordButtonPressed()
     {
         if (!speechInputManager.isRecording) // False vs ! for readability.
         {
             speechInputManager.StartRecording();
+            
         }
         else
         {
-            WhisperData data = await speechInputManager.StopRecording();
-            speechCompleted(data);
+            (WhisperData transcriptData, AudioClip clip) = await speechInputManager.StopRecording();
+            WhisperData referenceData = await speechInputManager.SendReferenceAudio(selectedChoiceData.choiceAudio);
+            SpeechCompleted(transcriptData, clip, referenceData);
         }
     }
 
-    void translateButtonPressed()
+    void TranslateButtonPressed()
     {
         if (currentLanguageID >= 2) // wraps around back to 0 if on 2 or above.
         {
@@ -95,9 +104,9 @@ public class SpeechPanelManager : MonoBehaviour
         ChangeDisplayText(currentLanguageID);
     }
 
-    void replayButtonPressed()
+    void ReplayButtonPressed()
     {
-        
+        audioManager.PlayDialogue(selectedChoiceData.choiceAudio);
     }
 
 
@@ -107,7 +116,7 @@ public class SpeechPanelManager : MonoBehaviour
     {
         if (langID == 0)
         {
-            displayText.text = selectedChoiceData.englishText;
+            displayText.text = selectedChoiceData.chineseText;
         }
         else if (langID == 1)
         {
@@ -115,7 +124,7 @@ public class SpeechPanelManager : MonoBehaviour
         }
         else
         {
-            displayText.text = selectedChoiceData.chineseText;
+            displayText.text = selectedChoiceData.englishText;
         }
 
     }

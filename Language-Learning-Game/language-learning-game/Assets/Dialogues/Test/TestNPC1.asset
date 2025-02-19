@@ -17,30 +17,36 @@ MonoBehaviour:
   - englishText: Hello!
     pinyinText: "N\u01D0 h\u01CEo!"
     chineseText: "\u4F60\u597D!"
+    dialogueAudio: {fileID: 8300000, guid: 5beefc8a45046324d9b3279c038c68ca, type: 3}
     hasChoice: 0
     choices: []
     nextElementID: 01000000
   - englishText: How are you?
     pinyinText: "N\u01D0 h\u01CEo ma?"
     chineseText: " \u4F60\u597D\u5417?"
+    dialogueAudio: {fileID: 8300000, guid: 184ae5a18512b434f8b02ada09e54c4d, type: 3}
     hasChoice: 1
     choices:
     - englishChoice: I'm good!
       pinyinChoice: "W\u01D2 h\u011Bn h\u01CEo!"
       chineseChoice: "\u6211\u5F88\u597D"
+      choiceAudio: {fileID: 8300000, guid: 29d7e0d089b9d19438b5011ccce8194c, type: 3}
     - englishChoice: I'm not good
       pinyinChoice: "W\u01D2 b\xF9 h\u01CEo"
       chineseChoice: "\u6211\u4E0D\u597D "
+      choiceAudio: {fileID: 8300000, guid: c8f58c24f1db59347bbf73a0e59e2331, type: 3}
     nextElementID: 0200000003000000
   - englishText: Goodbye
     pinyinText: "Z\xE0iji\xE0n"
     chineseText: "\u518D\u89C1"
+    dialogueAudio: {fileID: 8300000, guid: dcb09b64d028ca345bcea71d738346d4, type: 3}
     hasChoice: 0
     choices: []
     nextElementID: 
   - englishText: Goodbye2
     pinyinText: "Z\xE0iji\xE0n"
     chineseText: "\u518D\u89C1"
+    dialogueAudio: {fileID: 8300000, guid: dcb09b64d028ca345bcea71d738346d4, type: 3}
     hasChoice: 0
     choices: []
     nextElementID: 
