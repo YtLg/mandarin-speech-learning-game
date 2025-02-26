@@ -32,7 +32,7 @@ public class TranscriptButtonData : MonoBehaviour
     public void SetColour()
     {
         float percent = CalcPercentage(actualProb, expectedProb);
-        if (percent >= 70)
+        if (percent >= 68)
         {
             textComponent.color = Color.green;
         }
