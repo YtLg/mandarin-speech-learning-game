@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using TMPro;
@@ -38,6 +39,10 @@ public class OutputPanelManager : MonoBehaviour
     public GameObject transcriptButtonPrefab;
     private List<GameObject> transcriptButtonList = new List<GameObject>(); // in case we add translation functionality.
 
+    //--- CALCULATION TEMP VARIABLES ---//
+    float probability = 0.0f;
+    int tempCount = 0;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -67,69 +72,83 @@ public class OutputPanelManager : MonoBehaviour
     }
 
     // sets up the button display of the expected speech text
-    //void SetupExpectedTextButtons()
-    //{
-    //    transcriptButtonList.Clear();
-    //    float expectedTotal = 0;
-    //    float actualTotal = 0;
+    void SetupExpectedTextButtons()
+    {
+        transcriptButtonList.Clear();
 
-    //    // Clear the choice buttons from before from scene
-    //    foreach (Transform child in transcriptionArea.transform)
-    //    {
-    //        Destroy(child.gameObject);
-    //    }
+        // Clear the choice buttons from before from scene
+        foreach (Transform child in transcriptionArea.transform)
+        {
+            Destroy(child.gameObject);
+        }
 
-    //    int recWordCount = recordingData.words.Count;
-    //    for (int i = 0; i < idealData.words.Count; i++) {
-    //    {
-    //        // NOTE: listener of prefab buttons are defined within transcriptbuttondata
-    //        WordData idealWord = idealData.words[i];
+        int recWordCount = recordingData.words.Count;
+        int idealWordCount = idealData.words.Count;
+        for (int i = 0; i < idealWordCount; i++)
+        {
+                // NOTE: listener of prefab buttons are defined within transcriptbuttondata
+                WordData idealWord = idealData.words[i];
 
-    //        GameObject button = Instantiate(transcriptButtonPrefab, transcriptionArea.transform);
-    //        TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
-    //        transcriptButtonData.textComponent = button.GetComponentInChildren<TextMeshProUGUI>(); // can't do this in prefab,  must be done during runtime
+                GameObject button = Instantiate(transcriptButtonPrefab, transcriptionArea.transform);
+                TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
+                transcriptButtonData.textComponent = button.GetComponentInChildren<TextMeshProUGUI>(); // can't do this in prefab,  must be done during runtime
 
-    //        transcriptButtonData.buttonTextData = idealWord.word;
-    //        transcriptButtonData.expectedProb = idealWord.probability;
-    //        expectedTotal += transcriptButtonData.expectedProb;
-    //        transcriptButtonData.startTime = idealWord.start;
-    //        transcriptButtonData.endTime = idealWord.end;
-    //        transcriptButtonData.actualProb = 0.0f; // default for user input doesn't match.
-    //        string idealTemp = CleanMandarinText(idealWord.word);
-
-    //        // if idealWord.words[i] = 0 , avoid checking left neighbor
-    //        // if idealWord.words[i] = Count, avoid checking right neighbor.
-    //        // Check if i is equal to, or larger than recWordCount, or if i = 0.
-
-    //        // if idealWord.words[i] = 0, check if recWordCount size is 1. If it is, do some logic to check recordingData.words[i]. Check if recWordCount is at least 2. If it is, check recordingData.words[i+1]
-    //        // if idealWord.words[i] = idealData.words.Count, check if recWordCount size is = i. If it is, check recordingData.words[i], then check recWordCount[i-1]. If it isn't, check if recWordCount size is = i-1. If it is, check recWordCount[i-1], otherwise, do nothing.
-    //        // if idealWord.words[i] isn't any of the above. Check if recWordCount is <= i, if it is, check current and previous recordingData.words[i] & [i-1], then check if recWordCount<= i+1, if it is, check, if isn't leave it. If recWordCount <= i, check If recWordCount <= i-1, if it is, check i-1, if it isn't, do nothing.
+                transcriptButtonData.buttonTextData = idealWord.word;
+                transcriptButtonData.expectedProb = idealWord.probability;
+                transcriptButtonData.startTime = idealWord.start;
+                transcriptButtonData.endTime = idealWord.end;
+                transcriptButtonData.actualProb = 0.0f; // default for user input doesn't match.
 
 
+                // LOGIC TO DETERMINE ACTUAL PROBABILITY // 
+                int count = 0;              // reset count + sum every new ideal word.
+                float cumulativeSum = 0;
+                int max = 0;
+                if (i == 0) // 0 CASE
+                {
+                    if (recWordCount >= i + 2)
+                    {
+                        count += 1;
+                        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + 1]);
+                        cumulativeSum += probability;
+                        count += tempCount;
+                    }
+                    count += 1;
+                    (probability, tempCount) = CheckString(idealWord, recordingData.words[i]);
+                    cumulativeSum += probability;
+                    count += tempCount;
+                    transcriptButtonData.actualProb += cumulativeSum / count;
+                }
 
+                else // i !=0 CASE
+                {
+                    if (recWordCount > i + 1)
+                    {
+                        max = 1; // before + current + next item
+                    }
+                    else if (recWordCount == idealWordCount)
+                    {
+                        max = 0; // before + current item
+                    }
+                    else if (recWordCount == idealWordCount - 1)
+                    {
+                        max = -1; // before item
+                    }
 
-    //            foreach (WordData recordingWord in recordingData.words) // if it was said, replace 0.0f with actual prob.
-    //        {
-    //            string recTemp = CleanMandarinText(recordingWord.word); // TEMPORARY LOGIC TO DECIDE INITIAL PRONUNCIATION ACCURACY.
-    //            if (recTemp.Contains(idealTemp) || idealTemp.Contains(recTemp)) // BANDAID FOR ISSUSE WITH WORD SEGMENTATION FROM STT.
-    //            {
-    //                {
-    //                    transcriptButtonData.actualProb = recordingWord.probability; 
-    //                    actualTotal+= transcriptButtonData.actualProb;
-    //                }
-    //            }
-    //            transcriptButtonData.SetText();// SETS THE DISPLAY TEXT + TEXT COLOUR DEPENDING ON EXP PROB / ACTUAL PROB PERCENTAGE.
-    //            transcriptButtonList.Add(button);
-    //        }
-    //        if( ((actualTotal/expectedTotal)*100) < 65){
-    //            continueButton.gameObject.SetActive(false);
-    //        }
-    //        else
-    //        {
-    //            continueButton.gameObject.SetActive(true);
-    //        }
-    //    }
-    //}
+                    for (int j = -1; j <= max; j++) //if recording data size is larger than current i.
+                    {
+                        count += 1;
+                        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + j]);
+                        cumulativeSum += probability;
+                        count += tempCount;
+                    }
+
+                    transcriptButtonData.actualProb += cumulativeSum / count;
+                }
+            transcriptButtonData.SetText();
+        }
+    }
+
 
         // ---- Button Press Listeners ---- //
         public void TranscriptButtonPressed(GameObject buttonPressed)
@@ -171,6 +190,17 @@ public class OutputPanelManager : MonoBehaviour
             string pattern = @"[，。？！、；：“”‘’（）《》【】…—·\sA-Za-z]";
             string cleanedText = Regex.Replace(text, pattern, "");
             return cleanedText;
+        }
+
+        public (float,int) CheckString(WordData ideal, WordData recording)
+        {
+        string idealText = CleanMandarinText(ideal.word);
+        string recordedText = CleanMandarinText(recording.word);
+            if (idealText.Contains(recordedText) || idealText.Contains(recordedText))
+            {
+                return (recording.probability/ideal.probability, 0);
+            }
+         return (0, -1);
         }
 
 }

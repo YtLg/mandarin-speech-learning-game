@@ -8,8 +8,8 @@ from pprint import pprint
 model = whisper.load_model("small").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
-print(torch.cuda.device_count())  # Should be 1 (for 3070)
-print(torch.cuda.get_device_name(0))  # Should print "NVIDIA GeForce RTX 3070"
+# print(torch.cuda.device_count())
+# print(torch.cuda.get_device_name(0))
 
 # --------------------- TEST URIs ----------------------------
 
