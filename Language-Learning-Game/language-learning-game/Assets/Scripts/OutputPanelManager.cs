@@ -14,7 +14,7 @@ public class OutputPanelManager : MonoBehaviour
     //--- REFERENCE TO OTHER PANELS---//
     public SpeechPanelManager speechPanelManager;
     public DialogueManager dialoguePanelManager;
-    public PracticePanelManager practicePanelManager;
+    public PracticePanelInputManager practicePanelInputManager;
 
 
     //----- DATA ------ //
@@ -71,7 +71,7 @@ public class OutputPanelManager : MonoBehaviour
         outputPanel.SetActive(true);
     }
 
-    // sets up the button display of the expected speech text
+    // sets up the button display of the expected speech text transcript
     void SetupExpectedTextButtons()
     {
         transcriptButtonList.Clear();
@@ -93,6 +93,7 @@ public class OutputPanelManager : MonoBehaviour
                 TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
                 transcriptButtonData.textComponent = button.GetComponentInChildren<TextMeshProUGUI>(); // can't do this in prefab,  must be done during runtime
 
+                transcriptButtonData.textAudio = choiceAudio;
                 transcriptButtonData.buttonTextData = idealWord.word;
                 transcriptButtonData.expectedProb = idealWord.probability;
                 transcriptButtonData.startTime = idealWord.start;
@@ -101,6 +102,9 @@ public class OutputPanelManager : MonoBehaviour
 
 
                 // LOGIC TO DETERMINE ACTUAL PROBABILITY // 
+                // Each word segment will check its neighboring words for the presence of its words in that word segment.
+                // If it is present then it will add it into a running total, and average it based on how many words were present to get the total.
+
                 int count = 0;              // reset count + sum every new ideal word.
                 float cumulativeSum = 0;
                 int max = 0;
@@ -155,7 +159,7 @@ public class OutputPanelManager : MonoBehaviour
         {
             
             outputPanel.SetActive(false);
-            practicePanelManager.SetupPanel(buttonPressed.GetComponent<TranscriptButtonData>(), choiceAudio);
+            practicePanelInputManager.SetupPanel(buttonPressed.GetComponent<TranscriptButtonData>());
         }
 
         void TryAgainPressed()

@@ -44,8 +44,6 @@ public class SpeechPanelManager : MonoBehaviour
         translateButton.onClick.AddListener(TranslateButtonPressed);
         replayButton.onClick.AddListener(ReplayButtonPressed);
         recordButton.onClick.AddListener(RecordButtonPressed);
-        replayButton.onClick.AddListener(ReplayButtonPressed);
-
     }
 
     public void DisplaySpeechPanel(ButtonDataScript buttonData)
@@ -84,9 +82,10 @@ public class SpeechPanelManager : MonoBehaviour
         }
         else
         {
-            (WhisperData transcriptData, AudioClip clip) = await speechInputManager.StopRecording();
+            (byte[] recordedBytes, AudioClip recordedClip) = speechInputManager.StopRecording();
+            WhisperData transcriptData = await speechInputManager.SendRecordedAudio(recordedBytes);
             WhisperData referenceData = await speechInputManager.SendReferenceAudio(selectedChoiceData.choiceAudio);
-            SpeechCompleted(transcriptData, clip, referenceData);
+            SpeechCompleted(transcriptData, recordedClip, referenceData);
         }
     }
 

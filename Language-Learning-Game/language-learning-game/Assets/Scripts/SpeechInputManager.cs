@@ -2,7 +2,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SpeechInputManager : MonoBehaviour
@@ -25,13 +27,14 @@ public class SpeechInputManager : MonoBehaviour
         recordedSpeech = Microphone.Start(null, false, maxRecLength, 44100);
     }
 
-    async public Task<(WhisperData, AudioClip)> StopRecording() // Ends the recording and does post-recording processing.  
+    public (byte[], AudioClip) StopRecording() // Ends the recording and does post-recording processing.  
     {
         Debug.Log("Ended!");
         isRecording = false;
         var position = Microphone.GetPosition(null);
         Microphone.End(null);
 
+        // Format the recording data correctly || 1. get the relevant audio data for converstion, 2. properly define it as a WAV file manually.
         var samples = new float[position * recordedSpeech.channels];
         recordedSpeech.GetData(samples, 0);
 
@@ -40,18 +43,34 @@ public class SpeechInputManager : MonoBehaviour
 
 
         bytes = WriteToWav(samples, recordedSpeech.frequency, recordedSpeech.channels);
+        
+        return (bytes, recordedSpeech);  
+    }
 
+    async public Task<WhisperData> SendRecordedAudio(byte[] recordedAudio)
+    {
         var result = await apiManager.SendAudio(bytes);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
+        return (data);
 
-        Debug.Log("Transription is:" + data.transcription);
+        //Debug.Log("Transription is:" + data.transcription);
 
-        foreach (WordData word in data.words)
-        {
-            Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
-        }
+        //foreach (WordData word in data.words)
+        //{
+        //    Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
+        //}
+    }
 
-        return (data, recordedSpeech);
+    async public Task<AnalysisData> SendAnalysisAudio(TranscriptButtonData transcriptButtonData, byte[]bytes)    
+    {
+        float[] samples1 = new float[transcriptButtonData.textAudio.samples * transcriptButtonData.textAudio.channels];
+        transcriptButtonData.textAudio.GetData(samples1, 0);
+
+        byte[] wavData = WriteToWav(samples1, transcriptButtonData.textAudio.frequency, transcriptButtonData.textAudio.channels);
+
+        var result = await apiManager.AnalyseAudio(transcriptButtonData.startTime, transcriptButtonData.endTime, wavData, bytes);
+        AnalysisData analysisData = JsonConvert.DeserializeObject<AnalysisData>(result);
+        return (analysisData);
     }
 
 
@@ -66,13 +85,6 @@ public class SpeechInputManager : MonoBehaviour
 
         var result = await apiManager.SendAudio(wavData);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
-
-        Debug.Log("Transcription is: " + data.transcription);
-
-        foreach (WordData word in data.words)
-        {
-            Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
-        }
 
         return data;
     }
@@ -123,4 +135,13 @@ public class WordData
     public float start;
     public float end;
     public float probability;
+}
+
+public class AnalysisData
+{
+    public float[] pitchRecording;
+    public float[] timestampsRecording;
+    public float[] pitchReference;
+    public float[] timestampsReference;
+    public float[] majorDifferences;
 }

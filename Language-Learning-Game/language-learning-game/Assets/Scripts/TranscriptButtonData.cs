@@ -8,6 +8,7 @@ public class TranscriptButtonData : MonoBehaviour
     public TextMeshProUGUI textComponent;
     private Button button;
 
+    public AudioClip textAudio;
     public string buttonTextData;
     public float expectedProb;
     public float actualProb;
@@ -36,13 +37,13 @@ public class TranscriptButtonData : MonoBehaviour
         {
             textComponent.color = Color.green;
         }
-        else if(percent >= 30)
+        else if(percent >= 0)
         {
-            textComponent.color = Color.yellow;
+            textComponent.color = Color.red;
         }
         else
         {
-            textComponent.color= Color.red;
+            textComponent.color = Color.yellow;
         }
     }
 

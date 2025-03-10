@@ -29,7 +29,6 @@ async def hello(timestamp: TimestampArray):
 #----------------------- IMPLEMENTATION URI ---------------------------------
 @app1.post("/analyseAudio")
 async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, referenceFile: UploadFile = File(...), recordingFile: UploadFile = File(...)):
-    print("1-----------------------")
     referenceAudio = await referenceFile.read()
     recordingAudio = await recordingFile.read()
 
