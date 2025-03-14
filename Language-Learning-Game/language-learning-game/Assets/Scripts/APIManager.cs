@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
 using Unity.Sentis;
+using System.Globalization;
 
 public class ApiManager : MonoBehaviour
 {
@@ -30,16 +31,17 @@ public class ApiManager : MonoBehaviour
             return null;
         }
     }
-
     public async Task<string> AnalyseAudio(float start, float end, byte[] reference, byte[] recording)
     {
+        string url = $"{urlParsel}/analyseAudio"+ $"?timestampStart={UnityWebRequest.EscapeURL(start.ToString(CultureInfo.InvariantCulture))}"
+            + $"&timestampEnd={UnityWebRequest.EscapeURL(end.ToString(CultureInfo.InvariantCulture))}";
         WWWForm form = new();
-        form.AddField("data", start.ToString());
-        form.AddField("data", end.ToString());
-        form.AddBinaryData("file", reference, "reference_audio.wav", "audio/wav");
-        form.AddBinaryData("file", recording, "recording_audio.wav", "audio/wav");
-
-        using UnityWebRequest request = UnityWebRequest.Post(urlParsel + "/analyseAudio", form);
+        //form.AddField("timestampStart", start.ToString(CultureInfo.InvariantCulture));
+        //form.AddField("timestampEnd", end.ToString(CultureInfo.InvariantCulture));
+        form.AddBinaryData("referenceFile", reference, "reference_audio.wav", "audio/wav");
+        form.AddBinaryData("recordingFile", recording, "recording_audio.wav", "audio/wav");
+        
+        using UnityWebRequest request = UnityWebRequest.Post(url, form);
         var operation = request.SendWebRequest();
 
         await operation;
@@ -52,6 +54,7 @@ public class ApiManager : MonoBehaviour
         else
         {
             Debug.LogError($"Error: {request.error}, Status Code: {request.responseCode}");
+            Debug.LogError($"Server Response: {request.downloadHandler.text}");
             return null;
         }
     }

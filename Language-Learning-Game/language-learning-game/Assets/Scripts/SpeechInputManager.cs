@@ -14,9 +14,7 @@ public class SpeechInputManager : MonoBehaviour
     public int maxRecLength = 10;
     private AudioClip recordedSpeech;
     private byte[] bytes;
-    private byte[] referenceBytes;
     [HideInInspector] public bool isRecording = false;
-    private string result;
 
     //--- Other Components ---//
     public ApiManager apiManager;
@@ -31,6 +29,7 @@ public class SpeechInputManager : MonoBehaviour
     {
         Debug.Log("Ended!");
         isRecording = false;
+        Debug.Log("Is recording is" + isRecording);
         var position = Microphone.GetPosition(null);
         Microphone.End(null);
 
@@ -49,7 +48,7 @@ public class SpeechInputManager : MonoBehaviour
 
     async public Task<WhisperData> SendRecordedAudio(byte[] recordedAudio)
     {
-        var result = await apiManager.SendAudio(bytes);
+        var result = await apiManager.SendAudio(recordedAudio);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
         return (data);
 
@@ -70,7 +69,7 @@ public class SpeechInputManager : MonoBehaviour
 
         var result = await apiManager.AnalyseAudio(transcriptButtonData.startTime, transcriptButtonData.endTime, wavData, bytes);
         AnalysisData analysisData = JsonConvert.DeserializeObject<AnalysisData>(result);
-        return (analysisData);
+        return analysisData;
     }
 
 
@@ -85,7 +84,7 @@ public class SpeechInputManager : MonoBehaviour
 
         var result = await apiManager.SendAudio(wavData);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
-
+        Debug.Log($"WhisperData: {JsonConvert.SerializeObject(data, Formatting.Indented)}");
         return data;
     }
 
@@ -93,32 +92,30 @@ public class SpeechInputManager : MonoBehaviour
     // Converts Unity AudioClip default format into .WAV format for API
     private byte[] WriteToWav(float[] sampleArray, int speechFrequency, int recordingChannels)
     {
-        using (var memoryStream = new MemoryStream(44 + sampleArray.Length * 2))
+        using var memoryStream = new MemoryStream(44 + sampleArray.Length * 2);
+        using (var writer = new BinaryWriter(memoryStream))
         {
-            using (var writer = new BinaryWriter(memoryStream))
-            {
-                // Converts it to the correct header for WAV.
-                writer.Write("RIFF".ToCharArray());
-                writer.Write(36 + sampleArray.Length * 2);
-                writer.Write("WAVE".ToCharArray());
-                writer.Write("fmt ".ToCharArray());
-                writer.Write(16);
-                writer.Write((ushort)1);
-                writer.Write((ushort)recordingChannels);
-                writer.Write(speechFrequency);
-                writer.Write(speechFrequency * recordingChannels * 2);
-                writer.Write((ushort)(recordingChannels * 2));
-                writer.Write((ushort)16);
-                writer.Write("data".ToCharArray());
-                writer.Write(sampleArray.Length * 2);
+            // Converts it to the correct header for WAV.
+            writer.Write("RIFF".ToCharArray());
+            writer.Write(36 + sampleArray.Length * 2);
+            writer.Write("WAVE".ToCharArray());
+            writer.Write("fmt ".ToCharArray());
+            writer.Write(16);
+            writer.Write((ushort)1);
+            writer.Write((ushort)recordingChannels);
+            writer.Write(speechFrequency);
+            writer.Write(speechFrequency * recordingChannels * 2);
+            writer.Write((ushort)(recordingChannels * 2));
+            writer.Write((ushort)16);
+            writer.Write("data".ToCharArray());
+            writer.Write(sampleArray.Length * 2);
 
-                foreach (var sample in sampleArray)
-                {
-                    writer.Write((short)(sample * short.MaxValue));
-                }
+            foreach (var sample in sampleArray)
+            {
+                writer.Write((short)(sample * short.MaxValue));
             }
-            return memoryStream.ToArray();
         }
+        return memoryStream.ToArray();
     }
 }
 
@@ -136,6 +133,12 @@ public class WordData
     public float end;
     public float probability;
 }
+public class DifferenceData
+{
+    public int index_Rec;
+    public int index_Ref;
+    public float deviation;
+}
 
 public class AnalysisData
 {
@@ -143,5 +146,7 @@ public class AnalysisData
     public float[] timestampsRecording;
     public float[] pitchReference;
     public float[] timestampsReference;
-    public float[] majorDifferences;
+    public DifferenceData[] majorDifferences;
 }
+
+

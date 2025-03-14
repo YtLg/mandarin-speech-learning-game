@@ -48,6 +48,7 @@ public class SpeechPanelManager : MonoBehaviour
 
     public void DisplaySpeechPanel(ButtonDataScript buttonData)
     {
+        currentLanguageID = 0;
         dialoguePanel.SetActive(true);
         selectedChoiceData = buttonData;
         displayText.text = selectedChoiceData.englishText;
@@ -83,8 +84,11 @@ public class SpeechPanelManager : MonoBehaviour
         else
         {
             (byte[] recordedBytes, AudioClip recordedClip) = speechInputManager.StopRecording();
+            Debug.Log("Stopped recording and data saved!");
             WhisperData transcriptData = await speechInputManager.SendRecordedAudio(recordedBytes);
+            Debug.Log("Transcript data for recording done!");
             WhisperData referenceData = await speechInputManager.SendReferenceAudio(selectedChoiceData.choiceAudio);
+            Debug.Log("Transcript data for reference done!");
             SpeechCompleted(transcriptData, recordedClip, referenceData);
         }
     }

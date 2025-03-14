@@ -1,14 +1,11 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi import Form
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 
 from pydub import AudioSegment
-import simplestretch
-import wave
-import contextlib
-
 import parselmouth
 import numpy as np
 from fastdtw import fastdtw
@@ -28,7 +25,8 @@ async def hello(timestamp: TimestampArray):
 
 #----------------------- IMPLEMENTATION URI ---------------------------------
 @app1.post("/analyseAudio")
-async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, referenceFile: UploadFile = File(...), recordingFile: UploadFile = File(...)):
+async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile: UploadFile = File(...), recordingFile: UploadFile = File(...)):
+
     referenceAudio = await referenceFile.read()
     recordingAudio = await recordingFile.read()
 
@@ -38,7 +36,6 @@ async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, r
     with open("3.wav","wb") as f:
         f.write(recordingAudio)
         f.close
-    
     # 1: Crop 2.wav to start + end timestamp (reference audio)
     audio = AudioSegment.from_file("2.wav")
     segment = audio[timestampStart*1000:timestampEnd*1000]
@@ -48,7 +45,7 @@ async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, r
         # Cut out silence <- DONE IN PARSELMOUTH LATER //
         # if noise exceeds a certain amount, return with a null value for failure. <-!!! TODO !!!
 
-    # # 2: Compress 3.wav to fix start + end timestamp boundaries
+    # # 2: Compress 3.wav to fix start + end timestamp boundaries NOTE: REMOVED DUE TO DISTORTION OF PITCH CONTOUR.
     # # Gets length of an audio.
     # with contextlib.closing(wave.open("3.wav",'r')) as f: 
     #     frames = f.getnframes()
@@ -72,8 +69,6 @@ async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, r
 
     non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
     interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
-    
-    print(interpolatedRecording)
 
     non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
     interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
@@ -93,6 +88,7 @@ async def analyseAudio(timestampStart: float = 0.0, timestampEnd: float = 0.0, r
         "timestampsReference": referenceTimes.tolist(),
         "majorDifferences": majorDifferences
     }
+    print(analysisResult)
     return JSONResponse(content=analysisResult)
 
 # ----------- HELPER FUNCTIONS -----------
@@ -144,7 +140,6 @@ def getDifferences(pitchA, pitchB, path, threshold=1):
     majorDeviation = []
     for (i, j) in path:
         deviation = pitchB[i] - pitchA[j]
-        print(deviation)
         if abs(deviation) > threshold:
             majorDeviation.append({"index_Rec": i, "index_Ref": j, "deviation": deviation})
     return majorDeviation

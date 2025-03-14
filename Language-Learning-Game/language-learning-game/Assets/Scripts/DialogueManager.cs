@@ -40,7 +40,7 @@ public class DialogueManager : MonoBehaviour
     private ButtonDataScript selectedChoiceData; // Data of the button pressed is stored here.
     public SpeechPanelManager speechPanelManager;
 
-    int currentLanguageID; // 0 = English | 1 = PinYin | 2 = Chinese
+    int currentLanguageID; // 0 = Chinese | 1 = PinYin | 2 = English
 
     // ---- INITIAL SETUP & DISPLAY FUNCTIONS--- //
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -71,21 +71,15 @@ public class DialogueManager : MonoBehaviour
         currentDialogue = dialogueElements; // Pass it to a global variable
         currentDialogueLine = currentDialogue.dialogueElementList[currentElementIndex]; // Store the current dialogue element
 
-        //Vector3 halfWayVector = (npcTransform.position + playerTransform.position).normalized;
-        //float temp = halfWayVector.y;
-        //halfWayVector.y = halfWayVector.x;
-        //halfWayVector.x = temp;
-        //canvas.transform.position = halfWayVector;
-
         // Calculate the canvas position to the left of the NPC relative to the player's perspective
         Vector3 directionToNPC = npcTransform.position - playerTransform.position;
-        directionToNPC.y = 0; // Ignore vertical difference (optional, depending on your game)
+        directionToNPC.y = 0;
         directionToNPC.Normalize();
 
         //// Calculate the left direction relative to the player's perspective
         Vector3 leftDirection = -Vector3.Cross(directionToNPC, Vector3.up).normalized;
 
-        //// Set the canvas position
+        // Set the canvas position
         canvas.transform.position = npcTransform.position + leftDirection * offset.magnitude;
 
         DisplayDialogue();
@@ -220,14 +214,14 @@ public class DialogueManager : MonoBehaviour
     {
         if (langID == 0)
         {
-            dialogueText.text = currentDialogueLine.englishText;
+            dialogueText.text = currentDialogueLine.chineseText;
         }
         else if(langID == 1) {
             dialogueText.text = currentDialogueLine.pinyinText;
         }
         else
         {
-            dialogueText.text = currentDialogueLine.chineseText;
+            dialogueText.text = currentDialogueLine.englishText;
         }
 
     }

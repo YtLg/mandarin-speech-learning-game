@@ -37,7 +37,7 @@ public class OutputPanelManager : MonoBehaviour
     //--- PREFAB TRANSCRIPTION BUTTON COMPONENTS---//
     public GameObject transcriptionArea;
     public GameObject transcriptButtonPrefab;
-    private List<GameObject> transcriptButtonList = new List<GameObject>(); // in case we add translation functionality.
+    private List<GameObject> transcriptButtonList = new(); // in case we add translation functionality.
 
     //--- CALCULATION TEMP VARIABLES ---//
     float probability = 0.0f;
@@ -124,7 +124,7 @@ public class OutputPanelManager : MonoBehaviour
                     transcriptButtonData.actualProb += cumulativeSum / count;
                 }
 
-                else // i !=0 CASE
+                else if (recWordCount > 1) // i !=0 CASE
                 {
                     if (recWordCount > i + 1)
                     {
@@ -153,6 +153,10 @@ public class OutputPanelManager : MonoBehaviour
         }
     }
 
+    public void DisplayThePanel()
+    {
+        outputPanel.SetActive(true);
+    }
 
         // ---- Button Press Listeners ---- //
         public void TranscriptButtonPressed(GameObject buttonPressed)
@@ -164,14 +168,14 @@ public class OutputPanelManager : MonoBehaviour
 
         void TryAgainPressed()
         {
-            outputPanel.gameObject.SetActive(false);
+            outputPanel.SetActive(false);
             speechPanelManager.ShowSpeechPanel();
             // TODO: Call some function in SpeechPanelManager to make it appear again, then hide this panel.
         }
 
         void ContinuePressed()            
         {
-            outputPanel.gameObject.SetActive(false);
+            outputPanel.SetActive(false);
             dialoguePanelManager.ContinueButtonPressed();
             // TODO: Call some function in DialogueManager to make it go to the next dialogue then hide this panel.
         }

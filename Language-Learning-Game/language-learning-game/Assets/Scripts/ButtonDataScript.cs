@@ -28,14 +28,14 @@ public class ButtonDataScript : MonoBehaviour
         //Debug.Log(languageID);
         if (languageID == 0)
         {
-            textComponent.text = englishText;
+            textComponent.text = chineseText;
         }
         else if(languageID == 1) {
             textComponent.text = pinyinText;
         }
         else
         {
-            textComponent.text = chineseText;
+            textComponent.text = englishText;
         }
     }
 }

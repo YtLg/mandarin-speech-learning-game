@@ -33,11 +33,12 @@ public class TranscriptButtonData : MonoBehaviour
     public void SetColour()
     {
         float percent = CalcPercentage(actualProb, expectedProb);
+        Debug.Log("percent of " + buttonTextData + "is " + percent);
         if (percent >= 70)
         {
             textComponent.color = Color.green;
         }
-        else if(percent >= 0)
+        else if(float.IsNaN(percent))
         {
             textComponent.color = Color.red;
         }

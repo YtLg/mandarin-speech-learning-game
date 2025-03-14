@@ -8,11 +8,8 @@ public class AudioManager : MonoBehaviour
 
     public AudioClip backgroundMusic;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        // Implementation to start playing background audio if applicable
-    }
+    private Coroutine segmentStopCoroutine;
+
 
     // Playing, pausing and swapping out the background audio
 
@@ -35,12 +32,25 @@ public class AudioManager : MonoBehaviour
 
     public void PlayDialogue(AudioClip dialogue)
     {
-        voiceSource.PlayOneShot(dialogue); // One-off doesn't save audio unlike music.
+        voiceSource.PlayOneShot(dialogue);
     }
 
     public void StopDialogue()
     {
         voiceSource.Stop();
+    }
+
+    public void PlaySegment(AudioClip dialogue, float start, float end)
+    {
+        voiceSource.clip = dialogue;
+        voiceSource.time = start;
+        voiceSource.Play();
+
+        if (segmentStopCoroutine != null)
+        {
+            StopCoroutine(segmentStopCoroutine);
+        }
+        segmentStopCoroutine = StartCoroutine(StopTimer(end - start));
     }
 
     // For playing and stopping non-speech sound effects to avoid interrupt.
@@ -53,6 +63,12 @@ public class AudioManager : MonoBehaviour
     public void StopSoundEffect()
     {
         sfxSource.Stop();
+    }
+    private System.Collections.IEnumerator StopTimer(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        voiceSource.Stop();
+        segmentStopCoroutine = null;
     }
 
 }

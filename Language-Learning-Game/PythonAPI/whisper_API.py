@@ -9,7 +9,7 @@ device = "cuda"
 batch_size = 16
 compute_type = "float16"
 
-model = whisperx.load_model("large-v2", device, compute_type=compute_type)
+model = whisperx.load_model("tiny", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
@@ -54,12 +54,14 @@ def whisperTranscribe(audioFile):
     wordsList = []
     for item in resultAligned["segments"][0]["words"]:
         if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
+            print(item)
             continue
+        print(item)
         wordsList.append({
             "word":item["word"],
             "start":item["start"],
             "end":item["end"],
-            "score":item["score"]
+            "probability":item["score"]
         })
 
     # remove all punctuation, special charactes & spaces.
