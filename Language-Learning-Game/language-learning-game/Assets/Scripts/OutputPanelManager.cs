@@ -15,6 +15,7 @@ public class OutputPanelManager : MonoBehaviour
     public SpeechPanelManager speechPanelManager;
     public DialogueManager dialoguePanelManager;
     public PracticePanelInputManager practicePanelInputManager;
+    public ObjectPanelManager objectPanelManager;
 
 
     //----- DATA ------ //
@@ -42,6 +43,7 @@ public class OutputPanelManager : MonoBehaviour
     //--- CALCULATION TEMP VARIABLES ---//
     float probability = 0.0f;
     int tempCount = 0;
+    int objectOrNPC;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -60,8 +62,9 @@ public class OutputPanelManager : MonoBehaviour
 
     // Sets up the UI elements of the result panel
     // data = transcript of speech input / referenceData = transcript of fluent speaker audio / buttonData = fluent speaker audio file / 
-    public void SetupDisplayOutputPanel(WhisperData data, AudioClip recordedSpeech, WhisperData referenceData, AudioClip referenceAudio)
+    public void SetupDisplayOutputPanel(WhisperData data, AudioClip recordedSpeech, WhisperData referenceData, AudioClip referenceAudio, int type)
     {
+        objectOrNPC = type;
         recordingData = data;
         choiceAudio = referenceAudio;
         recSpeech = recordedSpeech;
@@ -158,57 +161,63 @@ public class OutputPanelManager : MonoBehaviour
         outputPanel.SetActive(true);
     }
 
-        // ---- Button Press Listeners ---- //
-        public void TranscriptButtonPressed(GameObject buttonPressed)
-        {
+    // ---- Button Press Listeners ---- //
+    public void TranscriptButtonPressed(GameObject buttonPressed)
+    {
             
-            outputPanel.SetActive(false);
-            practicePanelInputManager.SetupPanel(buttonPressed.GetComponent<TranscriptButtonData>());
-        }
+        outputPanel.SetActive(false);
+        practicePanelInputManager.SetupPanel(buttonPressed.GetComponent<TranscriptButtonData>());
+    }
 
-        void TryAgainPressed()
-        {
-            outputPanel.SetActive(false);
-            speechPanelManager.ShowSpeechPanel();
-            // TODO: Call some function in SpeechPanelManager to make it appear again, then hide this panel.
-        }
+    void TryAgainPressed()
+    {
+        outputPanel.SetActive(false);
+        speechPanelManager.ShowSpeechPanel();
+        // TODO: Call some function in SpeechPanelManager to make it appear again, then hide this panel.
+    }
 
-        void ContinuePressed()            
+    void ContinuePressed()            
+    {
+        outputPanel.SetActive(false);
+        if (objectOrNPC == 0)
         {
-            outputPanel.SetActive(false);
             dialoguePanelManager.ContinueButtonPressed();
-            // TODO: Call some function in DialogueManager to make it go to the next dialogue then hide this panel.
         }
-
-        // Plays the player speech input or example audio depending on button pressed.
-        void WhatYouSaidPressed()
+        else
         {
-            audioManager.PlayDialogue(recSpeech);
+            objectPanelManager.ShowObjectPanel();
         }
+    }
 
-        void WhatTheySaidPressed()
+    // Plays the player speech input or example audio depending on button pressed.
+    void WhatYouSaidPressed()
+    {
+        audioManager.PlayDialogue(recSpeech);
+    }
+
+    void WhatTheySaidPressed()
+    {
+        audioManager.PlayDialogue(choiceAudio);
+    }
+
+    //--- HELPER FUNCTIONS ---//
+
+    public string CleanMandarinText(string text) // removes punctuation and spaces for comparative purposes.
+    {
+        string pattern = @"[，。？！、；：“”‘’（）《》【】…—·\sA-Za-z]";
+        string cleanedText = Regex.Replace(text, pattern, "");
+        return cleanedText;
+    }
+
+    public (float,int) CheckString(WordData ideal, WordData recording)
+    {
+    string idealText = CleanMandarinText(ideal.word);
+    string recordedText = CleanMandarinText(recording.word);
+        if (idealText.Contains(recordedText) || idealText.Contains(recordedText))
         {
-            audioManager.PlayDialogue(choiceAudio);
+            return (recording.probability/ideal.probability, 0);
         }
-
-        //--- HELPER FUNCTIONS ---//
-
-        public string CleanMandarinText(string text) // removes punctuation and spaces for comparative purposes.
-        {
-            string pattern = @"[，。？！、；：“”‘’（）《》【】…—·\sA-Za-z]";
-            string cleanedText = Regex.Replace(text, pattern, "");
-            return cleanedText;
-        }
-
-        public (float,int) CheckString(WordData ideal, WordData recording)
-        {
-        string idealText = CleanMandarinText(ideal.word);
-        string recordedText = CleanMandarinText(recording.word);
-            if (idealText.Contains(recordedText) || idealText.Contains(recordedText))
-            {
-                return (recording.probability/ideal.probability, 0);
-            }
-         return (0, -1);
-        }
+        return (0, -1);
+    }
 
 }

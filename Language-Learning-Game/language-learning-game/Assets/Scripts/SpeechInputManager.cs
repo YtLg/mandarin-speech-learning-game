@@ -59,7 +59,8 @@ public class SpeechInputManager : MonoBehaviour
         //    Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
         //}
     }
-
+    
+    // Sends reference + recording audio data to API for analysis + feedback.   
     async public Task<AnalysisData> SendAnalysisAudio(TranscriptButtonData transcriptButtonData, byte[]bytes)    
     {
         float[] samples1 = new float[transcriptButtonData.textAudio.samples * transcriptButtonData.textAudio.channels];
@@ -133,20 +134,23 @@ public class WordData
     public float end;
     public float probability;
 }
-public class DifferenceData
-{
-    public int index_Rec;
-    public int index_Ref;
-    public float deviation;
-}
-
 public class AnalysisData
 {
     public float[] pitchRecording;
     public float[] timestampsRecording;
     public float[] pitchReference;
     public float[] timestampsReference;
-    public DifferenceData[] majorDifferences;
+    public float accuracyScore;
+    public string[] feedbackList;
 }
+
+//public class DifferenceData
+//{
+//    public int index_Rec;
+//    public int index_Ref;
+//    public float deviation;
+//}
+
+
 
 

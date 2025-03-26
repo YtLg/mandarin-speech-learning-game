@@ -160,7 +160,7 @@ public class DialogueManager : MonoBehaviour
     {
         dialoguePanel.SetActive(false);
         choicePanel.SetActive(false);
-        speechPanelManager.DisplaySpeechPanel(clickedButton.GetComponent<ButtonDataScript>());
+        speechPanelManager.DisplaySpeechPanel(clickedButton.GetComponent<ButtonDataScript>(), 0);
     }
 
     public void TranslateButtonPressed()

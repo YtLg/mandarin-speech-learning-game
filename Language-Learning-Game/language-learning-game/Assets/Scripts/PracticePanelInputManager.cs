@@ -26,6 +26,7 @@ public class PracticePanelInputManager : MonoBehaviour
 
     public void SetupPanel(TranscriptButtonData transcriptButtonData)
     {
+        Debug.Log("DATA IS:", transcriptButtonData);
         transcriptButtonData1 = transcriptButtonData;
         practiceDisplayText.text = transcriptButtonData.buttonTextData;
         referenceAudioClip = transcriptButtonData.textAudio;

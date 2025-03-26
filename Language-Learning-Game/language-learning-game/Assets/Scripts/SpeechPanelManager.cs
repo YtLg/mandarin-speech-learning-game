@@ -34,6 +34,8 @@ public class SpeechPanelManager : MonoBehaviour
 
     int currentLanguageID;
 
+    int objectOrNPC; // 0 = NPC, 1 = Object
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -46,13 +48,15 @@ public class SpeechPanelManager : MonoBehaviour
         recordButton.onClick.AddListener(RecordButtonPressed);
     }
 
-    public void DisplaySpeechPanel(ButtonDataScript buttonData)
+    public void DisplaySpeechPanel(ButtonDataScript buttonData, int type)
     {
         currentLanguageID = 0;
         dialoguePanel.SetActive(true);
         selectedChoiceData = buttonData;
         displayText.text = selectedChoiceData.englishText;
         audioManager.PlayDialogue(selectedChoiceData.choiceAudio);//PLAYS THE DIALOGUE OF AUDIO ATTACHED TO CHOICE BUTTON DATA
+
+        objectOrNPC = type;
     }
 
     public void ShowSpeechPanel()
@@ -67,7 +71,7 @@ public class SpeechPanelManager : MonoBehaviour
 
     public void SpeechCompleted(WhisperData transcriptData, AudioClip recordedSpeech, WhisperData referenceData)
     {
-        outputPanelManager.SetupDisplayOutputPanel(transcriptData, recordedSpeech, referenceData, selectedChoiceData.choiceAudio);
+        outputPanelManager.SetupDisplayOutputPanel(transcriptData, recordedSpeech, referenceData, selectedChoiceData.choiceAudio, objectOrNPC);
         dialoguePanel.SetActive(false);
     }
 

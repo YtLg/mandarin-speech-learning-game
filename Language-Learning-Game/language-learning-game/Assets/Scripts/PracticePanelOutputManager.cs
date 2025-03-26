@@ -2,25 +2,33 @@ using UnityEngine;
 using UnityEngine.UI;
 using XCharts.Runtime;
 using System;
+using TMPro;
 
 public class PracticePanelOutputManager : MonoBehaviour
 {
+
+    // Display Elements -----
     public GameObject practicePanelOutput;
     AudioClip recordingAudio;
     AudioClip referenceAudio;
     AnalysisData analysisData;
     TranscriptButtonData buttonData;
 
+    public TextMeshProUGUI feedbackText;
+    public TextMeshProUGUI scoreText;
+
+
     // Graph References--------
     public LineChart lineChart;
     public GameObject graphContainer;
 
+    // Button Interactibles-----
     public Button tryAgainButton;
     public Button returnButton;
     public Button hearRecordingButton;
     public Button hearReferenceButton;
 
-
+    // Object References
     public OutputPanelManager outputPanelManager;
     public PracticePanelInputManager practicePanelInputManager;
     public AudioManager audioManager;
@@ -55,9 +63,12 @@ public class PracticePanelOutputManager : MonoBehaviour
         Debug.Log(analysisData.timestampsReference.Length);
         Debug.Log("---------------------------");
 
-        for (int i = 0; i < analysisData.majorDifferences.Length; i++)
+        scoreText.text = analysisData.accuracyScore + "%";
+        
+        for(int i = 0; i < analysisData.feedbackList.Length; i++)
         {
-            Debug.Log("Major Difference " + i + ": " + analysisData.majorDifferences[i]);
+            Debug.Log(analysisData.feedbackList[i]);
+            feedbackText.text += analysisData.feedbackList[i] + "/r";
         }
 
         lineChart.RemoveAllSerie();

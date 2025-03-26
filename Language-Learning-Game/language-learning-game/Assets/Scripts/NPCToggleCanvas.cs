@@ -4,11 +4,9 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 
 public class NPCToggleCanvas : MonoBehaviour
 {
-    public GameObject canvas;
     public DialogueManager dialogueManager;
     public SpeechPanelManager speechPanelManager;
     public OutputPanelManager outputPanelManager;
-
     public DialogueElementsScript npcDialogueElements;
     public Vector3 offset = new(0f, 0f, 0f);
 

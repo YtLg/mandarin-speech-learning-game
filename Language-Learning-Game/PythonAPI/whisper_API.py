@@ -50,7 +50,9 @@ def whisperTranscribe(audioFile):
 
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     resultAligned = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=True)
-
+    print("----------------------------")
+    print(resultAligned)
+    
     wordsList = []
     for item in resultAligned["segments"][0]["words"]:
         if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
