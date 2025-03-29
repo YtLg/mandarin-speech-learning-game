@@ -45,6 +45,8 @@ public class PracticePanelOutputManager : MonoBehaviour
 
     public void SetupDisplayOutputPanel(AnalysisData analysisDataInput, AudioClip recordedSpeech, AudioClip referenceSpeech, TranscriptButtonData transcriptButtonData)
     {
+        feedbackText.text = "";
+
         buttonData = transcriptButtonData;
         analysisData = analysisDataInput;
         recordingAudio = recordedSpeech;
@@ -68,7 +70,7 @@ public class PracticePanelOutputManager : MonoBehaviour
         for(int i = 0; i < analysisData.feedbackList.Length; i++)
         {
             Debug.Log(analysisData.feedbackList[i]);
-            feedbackText.text += analysisData.feedbackList[i] + "/r";
+            feedbackText.text += analysisData.feedbackList[i] + "<br>";
         }
 
         lineChart.RemoveAllSerie();

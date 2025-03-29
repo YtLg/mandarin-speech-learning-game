@@ -71,6 +71,7 @@ public class OutputPanelManager : MonoBehaviour
         idealData = referenceData;
         transcriptText.text = ("You Said : \"" + data.transcription + "\"");
         SetupExpectedTextButtons();
+        ContinueConditionalSetup();
         outputPanel.SetActive(true);
     }
 
@@ -93,9 +94,10 @@ public class OutputPanelManager : MonoBehaviour
                 WordData idealWord = idealData.words[i];
 
                 GameObject button = Instantiate(transcriptButtonPrefab, transcriptionArea.transform);
+                transcriptButtonList.Add(button);
                 TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
                 transcriptButtonData.textComponent = button.GetComponentInChildren<TextMeshProUGUI>(); // can't do this in prefab,  must be done during runtime
-
+                
                 transcriptButtonData.textAudio = choiceAudio;
                 transcriptButtonData.buttonTextData = idealWord.word;
                 transcriptButtonData.expectedProb = idealWord.probability;
@@ -152,8 +154,36 @@ public class OutputPanelManager : MonoBehaviour
 
                     transcriptButtonData.actualProb += cumulativeSum / count;
                 }
+
             transcriptButtonData.SetText();
         }
+    }
+
+    public void ContinueConditionalSetup()
+    {
+        float actualProbTotal = 0;
+        float expectedProbTotal = 0;
+        for (int i = 0; i < transcriptButtonList.Count; i++)
+        {
+            TranscriptButtonData transcriptButtonData = transcriptButtonList[i].GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
+            actualProbTotal += transcriptButtonData.actualProb;
+            expectedProbTotal += transcriptButtonData.expectedProb;
+        }
+
+        if (float.IsNaN(actualProbTotal))
+        {
+            continueButton.gameObject.SetActive(false);
+            return;
+        }
+
+        float totalPercent = actualProbTotal / expectedProbTotal * 100;
+        if (totalPercent < 60)
+        {
+            continueButton.gameObject.SetActive(false);
+            return;
+        }
+
+        continueButton.gameObject.SetActive(true);
     }
 
     public void DisplayThePanel()

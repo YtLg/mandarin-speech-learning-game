@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9e3b0ff48f783147ab5b832b5b9302b, type: 3}
+  m_Name: ClassmatesDialogue
+  m_EditorClassIdentifier: 
+  npcName: "Classmates(\u540C\u5B66)"
+  dialogueElementList:
+  - englishText: Hello!
+    pinyinText: "N\u01D0 h\u01CEo!"
+    chineseText: "\u4F60\u597D!"
+    dialogueAudio: {fileID: 8300000, guid: d34561826e953024f8f6654d19031fa4, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Hello (plural)
+      pinyinChoice: "N\u01D0men h\u01CEo!"
+      chineseChoice: "\u4F60\u4EEC\u597D!"
+      choiceAudio: {fileID: 8300000, guid: d075e15a096aedf4eb21312426c86be1, type: 3}
+    - englishChoice: What are your names?
+      pinyinChoice: "N\u01D0men ji\xE0o sh\xE9nme m\xEDngz\xEC? "
+      chineseChoice: "\u4F60\u4EEC\u53EB\u4EC0\u4E48\u540D\u5B57\uFF1F"
+      choiceAudio: {fileID: 8300000, guid: ddb5312ebb5614e40a47e4cdc554a103, type: 3}
+    nextElementID: 0100000004000000
+  - englishText: 'Are you busy? '
+    pinyinText: "N\u01D0 m\xE1ng ma? "
+    chineseText: "\u4F60\u5FD9\u5417\uFF1F"
+    dialogueAudio: {fileID: 8300000, guid: b2c81103826bdf34eb9fb35877277f5f, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: 'I''m very busy '
+      pinyinChoice: "W\u01D2 h\u011Bn m\xE1ng "
+      chineseChoice: "\u6211\u5F88\u5FD9"
+      choiceAudio: {fileID: 8300000, guid: c525ad7171eafd743b99946320450640, type: 3}
+    - englishChoice: 'I''m not busy '
+      pinyinChoice: "W\u01D2 b\xF9 m\xE1ng "
+      chineseChoice: "\u6211\u4E0D\u5FD9"
+      choiceAudio: {fileID: 8300000, guid: 590aef3ec3490294cb0ed72e881bf774, type: 3}
+    nextElementID: 0200000002000000
+  - englishText: Goodbye!
+    pinyinText: "Z\xE0iji\xE0n!"
+    chineseText: "\u518D\u89C1!"
+    dialogueAudio: {fileID: 8300000, guid: 06cfb9e93d7a956409bacb1d7cac0f75, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Goodbye!
+      pinyinChoice: "Z\xE0iji\xE0n!"
+      chineseChoice: "\u518D\u89C1!"
+      choiceAudio: {fileID: 8300000, guid: 06cfb9e93d7a956409bacb1d7cac0f75, type: 3}
+    nextElementID: 03000000
+  - englishText: ...
+    pinyinText: ...
+    chineseText: ...
+    dialogueAudio: {fileID: 0}
+    hasChoice: 0
+    choices: []
+    nextElementID: 
+  - englishText: I'm called David, he's called  Ding Libo and she's called Lin Na
+    pinyinText: "W\u01D2 ji\xE0o m\u01CEd\xE0w\xE8i, t\u0101 ji\xE0o d\u012Bngl\xEC
+      b\u014D, t\u0101 ji\xE0o l\xEDnn\xE0"
+    chineseText: "\u6211\u53EB\u9A6C\u5927\u536B\uFF0C\u4ED6\u53EB\u4E01\u529B\u6CE2\uFF0C\u548C\u5979\u53EB\u6797\u5A1C"
+    dialogueAudio: {fileID: 8300000, guid: 903b7c81f13d2e04391963577257ab9f, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 05000000
+  - englishText: What is your name?
+    pinyinText: "N\u01D0 ji\xE0o sh\xE9nme m\xEDngz\xEC? "
+    chineseText: "\u4F60\u53EB\u4EC0\u4E48\u540D\u5B57\uFF1F "
+    dialogueAudio: {fileID: 8300000, guid: ddb5312ebb5614e40a47e4cdc554a103, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: 'I am called [name/omit]'
+      pinyinChoice: "W\u01D2 ji\xE0o [name/omit]"
+      chineseChoice: "\u6211\u53EB [name/omit]"
+      choiceAudio: {fileID: 8300000, guid: 6a9e901d89645cd4eaaee2f022a3c919, type: 3}
+    nextElementID: 06000000
+  - englishText: we are pleased to meet you!
+    pinyinText: "W\u01D2men g\u0101ox\xECng r\xE8nsh\xED n\u01D0 "
+    chineseText: "\u6211\u4EEC\u9AD8\u5174\u8BA4\u8BC6\u4F60"
+    dialogueAudio: {fileID: 8300000, guid: 974e03bb16157d340a882fff7a71f86b, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 02000000

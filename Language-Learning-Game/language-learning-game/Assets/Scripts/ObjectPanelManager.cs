@@ -38,15 +38,14 @@ public class ObjectPanelManager : MonoBehaviour
 
     }
 
-    public void ShowCanvas(Transform objectTransform, Vector3 offset, ObjectDataScript objectData)
+    public void ShowCanvas(Transform objectTransform, Vector3 offset, Vector3 magnitudeOffset, ObjectDataScript objectData)
     {
         currentLanguageID = 0;
         currentObjectData = objectData.objectData;
         canvas.SetActive(true);
-        Vector3 forward = playerTransform.forward;
-        forward.y = 0;
-        forward.Normalize();
-        canvas.transform.position = playerTransform.position + forward * offset.magnitude;
+
+        canvas.transform.position = playerTransform.position + playerTransform.forward * 2;
+        canvas.transform.position += offset;
 
         DisplayName();
     }

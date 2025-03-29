@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public class DialogueManager : MonoBehaviour
 {
     public Transform playerTransform;
+    private GameObject callingObject;
 
     //--- REFERENCE TO AUDIO MANAGER ---//
     public AudioManager audioManager;
@@ -60,11 +61,12 @@ public class DialogueManager : MonoBehaviour
     }
 
     // This will be called to position the canvas at the correct location relative to the npc and the player, then call DisplayDialogue to set up and display the dialogue box.
-    public void ShowCanvas(Transform npcTransform, Vector3 offset, DialogueElementsScript dialogueElements)
+    public void ShowCanvas(GameObject gObject, Transform npcTransform, Vector3 offset, Vector3 offset4Mag, DialogueElementsScript dialogueElements)
     {
         currentLanguageID = 0;
         currentElementIndex = 0; // Start at 0
 
+        callingObject = gObject;
         choicePanel.SetActive(false);
         canvas.SetActive(true); // Show the canvas
 
@@ -78,9 +80,13 @@ public class DialogueManager : MonoBehaviour
 
         //// Calculate the left direction relative to the player's perspective
         Vector3 leftDirection = -Vector3.Cross(directionToNPC, Vector3.up).normalized;
-
         // Set the canvas position
-        canvas.transform.position = npcTransform.position + leftDirection * offset.magnitude;
+        canvas.transform.position = npcTransform.position + leftDirection * offset4Mag.magnitude;
+        canvas.transform.position += offset;
+
+        //canvas.SetActive(true);
+
+        //canvas.transform.position = playerTransform.position + playerTransform.forward * 2;
 
         DisplayDialogue();
     }
@@ -101,7 +107,7 @@ public class DialogueManager : MonoBehaviour
             continueButton.gameObject.SetActive(true);
         }
 
-        speakerNameText.text = currentDialogue.name;
+        speakerNameText.text = currentDialogue.npcName;
         ChangeDialogueText(currentLanguageID);
         audioManager.PlayDialogue(currentDialogueLine.dialogueAudio); // PLAYS SPEECH AUDIO.
     }
@@ -148,6 +154,11 @@ public class DialogueManager : MonoBehaviour
         canvas.SetActive(true);
         if (currentDialogue == null || currentDialogueLine.nextElementID.Count == 0) // if there is no dialogue and the continue button is pressed, then end it.
         {
+            // Add Logic for completion
+
+            // Get the calling object to generate a star to mark completion.
+            StarGenerator starScript = callingObject.GetComponent<StarGenerator>();
+            starScript.GenerateStar();
             EndDialogue();
             return;
         }

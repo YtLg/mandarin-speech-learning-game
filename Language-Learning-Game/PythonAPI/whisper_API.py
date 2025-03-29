@@ -9,7 +9,7 @@ device = "cuda"
 batch_size = 16
 compute_type = "float16"
 
-model = whisperx.load_model("tiny", device, compute_type=compute_type)
+model = whisperx.load_model("large-v2", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
@@ -46,8 +46,7 @@ async def transcribeAudio(file: UploadFile = File(...)):
 # Transcribes the audio data and aligns it to get an accurate timestamp.
 def whisperTranscribe(audioFile):
     audio = whisperx.load_audio(audioFile)
-    result = model.transcribe(audio, batch_size=batch_size, language="zh")
-
+    result = model.transcribe(audio, batch_size=batch_size, language="zh", task="transcribe")
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     resultAligned = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=True)
     print("----------------------------")

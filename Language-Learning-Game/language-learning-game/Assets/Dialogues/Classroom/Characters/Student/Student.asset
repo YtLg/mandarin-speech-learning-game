@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9e3b0ff48f783147ab5b832b5b9302b, type: 3}
+  m_Name: Student
+  m_EditorClassIdentifier: 
+  npcName: "Student(\u540C\u5B66\uFF09"
+  dialogueElementList:
+  - englishText: Hello!
+    pinyinText: "N\u01D0 h\u01CEo"
+    chineseText: " \u4F60\u597D"
+    dialogueAudio: {fileID: 8300000, guid: 7f9d401e0c41caa40b686652114a3ef5, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Hello!
+      pinyinChoice: "N\u01D0 h\u01CEo"
+      chineseChoice: " \u4F60\u597D"
+      choiceAudio: {fileID: 8300000, guid: 7f9d401e0c41caa40b686652114a3ef5, type: 3}
+    nextElementID: 01000000
+  - englishText: ...
+    pinyinText: ...
+    chineseText: ...
+    dialogueAudio: {fileID: 0}
+    hasChoice: 1
+    choices:
+    - englishChoice: is this is your water?
+      pinyinChoice: "Zh\xE8 sh\xEC n\u01D0 de shu\u01D0 ma? "
+      chineseChoice: "\u8FD9\u662F\u4F60\u7684\u6C34\u5417\uFF1F "
+      choiceAudio: {fileID: 8300000, guid: 71df26bcabb10b441b0833959527098f, type: 3}
+    - englishChoice: is this is my water?
+      pinyinChoice: "Zh\xE8 sh\xEC w\u01D2 de shu\u01D0 ma? "
+      chineseChoice: "\u8FD9\u662F\u6211\u7684\u6C34\u5417\uFF1F "
+      choiceAudio: {fileID: 8300000, guid: 8d7743d1fbfd21140b15346c15b35025, type: 3}
+    nextElementID: 0200000005000000
+  - englishText: This is my water!
+    pinyinText: "Zh\xE8 ji\xF9sh\xEC w\u01D2 de shu\u01D0! "
+    chineseText: "\u8FD9\u5C31\u662F\u6211\u7684\u6C34\uFF01 "
+    dialogueAudio: {fileID: 8300000, guid: bfa991904fbbe41489bd8c41e961439a, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Ok!
+      pinyinChoice: "H\u01CEo de"
+      chineseChoice: " \u597D\u7684!"
+      choiceAudio: {fileID: 8300000, guid: 742a51c80d6a8ef4f8967c6caf399115, type: 3}
+    nextElementID: 03000000
+  - englishText: Goodbye!
+    pinyinText: "Z\xE0iji\xE0n!"
+    chineseText: "\u518D\u89C1!"
+    dialogueAudio: {fileID: 8300000, guid: d504871737751d849b4d3d2eaa746265, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Ok!
+      pinyinChoice: "H\u01CEo de"
+      chineseChoice: " \u597D\u7684!"
+      choiceAudio: {fileID: 8300000, guid: 742a51c80d6a8ef4f8967c6caf399115, type: 3}
+    nextElementID: 04000000
+  - englishText: ...
+    pinyinText: ...
+    chineseText: ...
+    dialogueAudio: {fileID: 0}
+    hasChoice: 0
+    choices: []
+    nextElementID: 
+  - englishText: nope!
+    pinyinText: "\u4E0D\u662F "
+    chineseText: "B\xF9sh\xEC "
+    dialogueAudio: {fileID: 8300000, guid: 84002c67f51467c458091da13ac03fc0, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 02000000

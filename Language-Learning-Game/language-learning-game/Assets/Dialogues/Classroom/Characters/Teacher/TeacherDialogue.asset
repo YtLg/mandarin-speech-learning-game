@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9e3b0ff48f783147ab5b832b5b9302b, type: 3}
+  m_Name: TeacherDialogue
+  m_EditorClassIdentifier: 
+  npcName: "Teacher(\u8001\u5E08)"
+  dialogueElementList:
+  - englishText: hello!
+    pinyinText: "N\u01D0 h\u01CEo"
+    chineseText: " \u4F60\u597D"
+    dialogueAudio: {fileID: 8300000, guid: 50a53618466e571439aa65edcbc37547, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: hello!
+      pinyinChoice: "N\u01D0 h\u01CEo"
+      chineseChoice: " \u4F60\u597D"
+      choiceAudio: {fileID: 8300000, guid: 50a53618466e571439aa65edcbc37547, type: 3}
+    nextElementID: 01000000
+  - englishText: how are you?
+    pinyinText: "N\u01D0 h\u01CEo ma?"
+    chineseText: " \u4F60\u597D\u5417\uFF1F"
+    dialogueAudio: {fileID: 8300000, guid: d06d607249193de4c947192c025cad6f, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: I am good!
+      pinyinChoice: "W\u01D2 h\u011Bn h\u01CEo"
+      chineseChoice: "\u6211\u5F88\u597D"
+      choiceAudio: {fileID: 8300000, guid: 29d7e0d089b9d19438b5011ccce8194c, type: 3}
+    - englishChoice: I'm not good..
+      pinyinChoice: "W\u01D2 b\xF9 h\u01CEo"
+      chineseChoice: "\u6211\u4E0D\u597D"
+      choiceAudio: {fileID: 8300000, guid: 350eb22641cedf94badda1ad5490a3a7, type: 3}
+    nextElementID: 0200000006000000
+  - englishText: Ok!
+    pinyinText: "H\u01CEo de!"
+    chineseText: "\u597D\u7684!"
+    dialogueAudio: {fileID: 8300000, guid: d310af0a81553464e9b2de6d1bd3847b, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: how are you?
+      pinyinChoice: "N\u01D0 h\u01CEo ma?"
+      chineseChoice: " \u4F60\u597D\u5417\uFF1F"
+      choiceAudio: {fileID: 8300000, guid: d06d607249193de4c947192c025cad6f, type: 3}
+    nextElementID: 03000000
+  - englishText: 'I''m not good '
+    pinyinText: "W\u01D2 b\xF9 h\u01CEo"
+    chineseText: "\u6211\u4E0D\u597D.."
+    dialogueAudio: {fileID: 8300000, guid: 350eb22641cedf94badda1ad5490a3a7, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: How come?
+      pinyinChoice: "W\xE8ish\xE9me? "
+      chineseChoice: "\u4E3A\u4EC0\u4E48?"
+      choiceAudio: {fileID: 8300000, guid: 314864f076ee2f343a50c761d8a9493c, type: 3}
+    nextElementID: 04000000
+  - englishText: I'm very busy..
+    pinyinText: "W\u01D2 h\u011Bn m\xE1ng.."
+    chineseText: "\u6211\u5F88\u5FD9.."
+    dialogueAudio: {fileID: 8300000, guid: 3b7b7ecdd41df5547848a0b32a4cb666, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Goodbye!
+      pinyinChoice: "Z\xE0iji\xE0n!"
+      chineseChoice: "\u518D\u89C1!"
+      choiceAudio: {fileID: 8300000, guid: fb7ff108cd33700448adf1b6ca60d834, type: 3}
+    nextElementID: 05000000
+  - englishText: Goodbye!
+    pinyinText: "Z\xE0iji\xE0n!"
+    chineseText: "\u518D\u89C1!"
+    dialogueAudio: {fileID: 8300000, guid: fb7ff108cd33700448adf1b6ca60d834, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 
+  - englishText: How come?
+    pinyinText: "W\xE8ish\xE9me? "
+    chineseText: "\u4E3A\u4EC0\u4E48\uFF1F "
+    dialogueAudio: {fileID: 8300000, guid: 314864f076ee2f343a50c761d8a9493c, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: I'm very busy
+      pinyinChoice: "W\u01D2 h\u011Bn m\xE1ng "
+      chineseChoice: "\u6211\u5F88\u5FD9.."
+      choiceAudio: {fileID: 8300000, guid: 3b7b7ecdd41df5547848a0b32a4cb666, type: 3}
+    - englishChoice: I'm very tired
+      pinyinChoice: "W\u01D2 h\u011Bn l\xE8i "
+      chineseChoice: "\u6211\u5F88\u7D2F "
+      choiceAudio: {fileID: 8300000, guid: c1cbe18c59b3e194db0b01b1e788389d, type: 3}
+    nextElementID: 0700000007000000
+  - englishText: Ok..
+    pinyinText: "H\u01CEo de.. "
+    chineseText: "\u597D\u7684.."
+    dialogueAudio: {fileID: 8300000, guid: 314864f076ee2f343a50c761d8a9493c, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: How are you?
+      pinyinChoice: "N\u01D0 h\u01CEo ma?"
+      chineseChoice: "\u4F60\u597D\u5417\uFF1F "
+      choiceAudio: {fileID: 8300000, guid: d06d607249193de4c947192c025cad6f, type: 3}
+    nextElementID: 03000000
