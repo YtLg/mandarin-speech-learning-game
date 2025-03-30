@@ -17,10 +17,12 @@ originalRecordingData = []
 template1 = "Your tone seems to be {} throughout your speech just like the reference! Well done!"
 template2 = "Your tone seems to be {} throughout your speech, however it should be {} instead! Try to make your pitch contour display a similar contour to the reference line as shown on the graph!"
 template3 = "Your contour seems to exhibit {}. It should exhibit {} instead!"
+deviationTemplate = "Going from left to right, your deviations show that your tone is {}!"
 
 app1 = FastAPI()
 
 flattenThreshold = 30 # Hz Definition of threshold for flattenValues
+sizeThreshold = 0.05 # 5% / # threshold of difference for collapsing difference array
 
 class TimestampArray(BaseModel):
     timestamps: list = []
@@ -62,29 +64,32 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     # Converts the file specified by filepath to pitch values + timestamps.
     recordingInfo, recordingPitch, recordingTimes = fileToPitch("recording.wav")
     referenceInfo, referencePitch, referenceTimes = fileToPitch("croppedReference.wav")
-    print("RECORDING PRE-PROCESSING:", len(recordingPitch), len(recordingTimes) )
+   
     # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
     non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
     interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
     non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
     interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
     
-    originalRecordingData, originalReferenceData = interpolatedRecording, interpolatedReference
     # Resamples the shortest length pitch contour to match the sample size of the longer one.
     interpolatedReferenceResampled, referenceTimesResampled, interpolatedRecordingResampled, recordingTimesResampled = resampleShortest(interpolatedReference, referenceTimes, 
                                                                                                     interpolatedRecording, recordingTimes)
+    
+    originalRecordingData, originalReferenceData = interpolatedRecordingResampled, interpolatedReferenceResampled
+
     # Performs Min-Max normalisation to put them onto the same scale.
     minMaxRecording = minMaxNormalise(interpolatedRecordingResampled)
     minMaxReference = minMaxNormalise(interpolatedReferenceResampled)
 
     # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only tone 3.
     minMaxRecording = flattenValues(minMaxRecording, interpolatedRecordingResampled)
-    minMaxReference = flattenValues(minMaxReference, interpolatedReferenceResampled)
+    minMaxReference = flattenValues(minMaxReference, interpolatedReferenceResampled)    
 
     # Gets the datapoints that differ too much past a given threshold.
-    majorDifferences = getDifferences(minMaxReference, minMaxRecording, 0.3)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReference, minMaxRecording, 0.3)
+    print(allMajorDifferences)
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
-    score = getCorrectness(majorDifferences, minMaxRecording)
+    score = getCorrectness(allMajorDifferences, minMaxRecording)
 
     # Generates feedback from the processed data.
     feedback = []
@@ -95,6 +100,14 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
         feedback = compareToneTrends(minMaxReference, referenceTimes, minMaxRecording, recordingTimes, score)
         print(feedback)
 
+    # Only do this if score is under 65
+    relevantDeviations = []
+    if score < 65:
+        diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReference, minMaxRecording, relevantDifferences)
+        if len(diffFeedback) > 0:
+            feedback.append("Highlighted in red you will see points of major deviations in your tone!")
+            feedback.append(diffFeedback)
+
     # Need to return: pitches / times / major differences
     analysisResult = {
         "pitchRecording": minMaxRecording.tolist(),
@@ -102,6 +115,7 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
         "pitchReference": minMaxReference.tolist(),
         "timestampsReference": referenceTimesResampled.tolist(),
         "accuracyScore": score,
+        "relevantDeviations": relevantDeviations,
         "feedbackList": feedback
     }
 
@@ -171,16 +185,58 @@ def flattenValues(normalisedValues, originalvalues):
     return normalisedValues
 
 def getDifferences(pitchA, pitchB, threshold=0.25):
-    # i = recording index, j = reference index.
     pitchDifferences = pitchA - pitchB
-    bigDifferences = np.where(np.abs(pitchDifferences)>threshold)[0]
-    return bigDifferences
+    
+    # Truncates to 3.dp for clarity when debugging.
+    for i in range(len(pitchDifferences)-1):
+        pitchDifferences[i] = '%.3f'%(pitchDifferences[i])
+    
+    bigDifferencesIndexes = np.where(np.abs(pitchDifferences)>threshold)[0] # Creates an array where those differences are larger than a threshold.
+    
+    # Groups consequtive indexes, then groups arrays within a certain range of each other
+    diffIndexesConsequtive = groupByConsequtive(bigDifferencesIndexes)    
+    arraySizeThreshold = round(len(pitchDifferences *sizeThreshold))
+    groupedDiffIndexes = groupNeighbours(diffIndexesConsequtive, arraySizeThreshold)
+
+    # Removes any difference arrays that are below 10% of pitch data size to avoid noise.
+    for i in groupedDiffIndexes:
+        if len(i) <= round(len(pitchDifferences)*0.10):
+            groupedDiffIndexes.remove(i)
+
+    # Returns all the indexes, the relevant indexes
+    return bigDifferencesIndexes, groupedDiffIndexes
 
 def getCorrectness(majorDeviations,recordingValues):
     if len(majorDeviations) == 0:
         return 100
     errorRate = len(majorDeviations) / len(recordingValues)*100
     return 100-errorRate
+
+def groupByConsequtive(diffIndexes):
+    diffIndexes = [int(x) for x in diffIndexes] # Fix formatting issue
+    groupedArr = [[diffIndexes[0]]]
+    for x in diffIndexes[1:]:
+        if x == groupedArr[-1][-1] + 1:
+            groupedArr[-1].append(x)
+        else:
+            groupedArr.append([x])
+    return groupedArr
+
+def groupNeighbours(indexArray, n=2):
+    finalArray = []
+
+    for subArray in indexArray:       
+        if indexArray[0] == subArray:
+            finalArray.append(subArray)
+            continue
+
+        if abs(finalArray[-1][-1] - subArray[0]) <= n:
+            finalArray[-1].extend(subArray)
+        else:
+            finalArray.append(subArray)
+    
+    return finalArray
+
 
 # ---------- FEEDBACK GENERATOR -------------
 
@@ -209,6 +265,9 @@ def compareNeutral(referencePitchValues, referenceTimes, recordingPitchValues, r
 # Other tones: flat, rising, dipping, falling. short -> long.
 def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues, recordingTimes, percent):
     feedback = []
+    referenceTrends, recordingTrends = getTrend(referencePitchValues, recordingPitchValues, 3) # Computes the trend of data for each "n" amount of segments.
+    referenceTrends = removeDuplicateConsequtive(referenceTrends)
+    recordingTrends = removeDuplicateConsequtive(recordingTrends)   
 
     #compare length -------
     feedback.append(compareLength(referenceTimes, recordingTimes))
@@ -217,17 +276,11 @@ def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues
     print(percent)
     # Fallback to avoid unhelpful feedback if accuracy is high:
     if percent > 70:
-        referenceTrends, recordingTrends = getTrend(referencePitchValues, recordingPitchValues, 3)
         feedback.append(template1.format(generateSentence(referenceTrends, " then ")))
         return feedback
 
-    recordingDifference = max(recordingPitchValues) - min(recordingPitchValues)
-    if recordingDifference <= 0.1:
-        feedback.append("Your tone is flat, just like the reference, well done!")
-
     else:
         # CASE: Tone isn't flat
-        referenceTrends, recordingTrends = getTrend(referencePitchValues, recordingPitchValues, 3) # Computes the trend of data for each "n" amount of segments.
         generatedFeedback = generateFeedback(referenceTrends, recordingTrends, percent) #Generates feedback from the trends.
         if percent < 61:
             feedback.append("Your Accuracy score seems low, check if your speech exhibits the same trends at similar time intervals to the green line!")
@@ -239,20 +292,31 @@ def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues
 def getTrend(referencePitchValues, recordingPitchValues, segments):
     referenceTrends = []
     recordingTrends = []
+    # Segments minmax data
     segmentedRecordingPitches = segmentData(recordingPitchValues, segments)
     segmentedReferencePitches = segmentData(referencePitchValues, segments)
+    
+    # Segments original data
+    segmentedRecordingOriginal = segmentData(originalRecordingData, segments)
+    segmentedReferenceOriginal = segmentData(originalReferenceData, segments)
+
 
     for i in range(len(segmentedRecordingPitches)):
         indexes = [i for i in range(len(segmentedRecordingPitches[i]))]
-        trend = detectTrend(indexes, segmentedRecordingPitches[i], originalRecordingData)
-        trendRef = detectTrend(indexes, segmentedReferencePitches[i], originalReferenceData)
+        trend = detectTrend(indexes, segmentedRecordingPitches[i], segmentedRecordingOriginal[i])
+        trendRef = detectTrend(indexes, segmentedReferencePitches[i], segmentedReferenceOriginal[i])
         recordingTrends.append(numTrendToString(trend))
         referenceTrends.append(numTrendToString(trendRef))
-        # Do some processing on data to formulate them into actual string sentences.
-
+    
     return referenceTrends, recordingTrends
 
 # FUNCTIONS TO FORMAT DATA FOR FEEDBACK
+def removeDuplicateConsequtive(trends): # Removes consequtive equivalent items
+    processedTrends = []
+    for trend in trends:
+        if len(processedTrends)<1 or trend != processedTrends[-1]: # if current item is same as latest processed item leave it out.
+            processedTrends.append(trend)
+    return processedTrends
 
 def detectTrend(indexArray, dataArray, originalData, order=1):
     dataArray = flattenValues(dataArray, originalData)
@@ -260,6 +324,7 @@ def detectTrend(indexArray, dataArray, originalData, order=1):
     slope = result[-2]
     return float(slope)
 
+# Converts the data gotten from detectTrend + getTrend into word feedbck.
 def numTrendToString(trendVal):
     if trendVal >= 0.001: # > 0.001 ranges is rising slope.
         trend = "rising"
@@ -275,47 +340,41 @@ def segmentData(data, segements):
 
 # FEEDBACK GENERATORS
 
-def generateFeedback(referenceTrends,recordingTrends, percent):
+def generateFeedback(referenceTrends,recordingTrends):
     feedback = []
 
-    print(referenceTrends)
-    print(recordingTrends)
-    referenceTrends = list(set(referenceTrends))
-    recordingTrends = list(set(recordingTrends))
-    print(referenceTrends)
-    print(recordingTrends)
-
-    count=0
+    sameTrends = True
     if len(referenceTrends) == len(recordingTrends): # Only if trends are equal in length are they equivalent
-        for i in range(referenceTrends): 
-            if referenceTrends[i] == recordingTrends[i]: # Checks each individual element, so order matters vs comparison on whole array
-                count+=1 # increment counter if they're the same
+        for i in range(len(referenceTrends)): 
+            if referenceTrends[i] != recordingTrends[i]: # Checks each individual element, so order matters vs comparison on whole array
+                sameTrends = False
 
     # Only provide a confirmation message of positive feedback if everything is correct (indicated by count being equal to size of reference trends & referenceTrends isn't null)
-    if count == len(referenceTrends) and len(referenceTrends) != 0:
+    if sameTrends == True:
         feedback.append(template1.format(generateSentence(recordingTrends, " then ")))
         return feedback
     
-    thing = feedback.append(template2.format(generateSentence(recordingTrends, " then "), generateSentence(referenceTrends, " then ")))
+    feedback.append(template2.format(generateSentence(recordingTrends, " then "), generateSentence(referenceTrends, " then ")))
 
     # Translates voice feedback into feedback on the graph.
     slopeTrendsRef = generateSlopeFeedback(referenceTrends)
     slopeTrendsRec = generateSlopeFeedback(recordingTrends)
 
-    # If they're the same, but accuracy overall is low due to different points of trend appearance:
-    if len(slopeTrendsRef) == len(slopeTrendsRec):
-        for i in range(referenceTrends):
-        if slopeTrendsRef == slopeTrendsRec:
-        feedback.append("Well done! The overall trend of your speech is" + generateSentence(slopeTrendsRec, " followed by ") + "If there are criticisms of your voice earlier, it could be due to noise!")    
+    # If they're the same, but accuracy overall is low due to different points of trend appearance:  
     feedback.append(template3.format(generateSentence(slopeTrendsRec, " followed by "), generateSentence(slopeTrendsRef, " followed by ")))
     return feedback
 
 def generateSentence(trend, connector):
     sentence = ""
-    i = -1
-    for i in range(len(trend)-1):
-        sentence = sentence + trend[i+1] + connector
-    sentence = sentence + trend[i+1]
+    if len(trend) <= 1:
+        sentence = sentence + trend[0]
+        return sentence
+
+    for i in range(len(trend)):
+        if i == len(trend)-1:
+            sentence = sentence + trend[i]
+            continue
+        sentence = sentence + trend[i] + connector
     return sentence
 
 def generateSlopeFeedback(trend):
@@ -328,6 +387,56 @@ def generateSlopeFeedback(trend):
         else:
             lines.append("a sharp drop in the slope")
     return lines
+
+def generateDifferenceFeedback(referencePitchValues, recordingPitchValues, relevantDeviations):
+
+    # Get the values each index refers to and populates an array of the same format.
+    referenceValues = [[referencePitchValues[i] for i in subarray] for subarray in relevantDeviations]
+    originalRefValues = [[originalReferenceData[i] for i in subarray] for subarray in relevantDeviations]
+
+    recordingValues = [[recordingPitchValues[i] for i in subarray] for subarray in relevantDeviations]
+    originalRecValues = [[originalRecordingData[i] for i in subarray] for subarray in relevantDeviations]
+
+    recordingTrends, referenceTrends, textRefTrends, textRecTrends = [], [], [], []
+
+    for i in range(len(referenceValues)):
+        referenceTrend = detectTrend(relevantDeviations[i], referenceValues[i], originalRefValues[i])
+        referenceTrends.append(referenceTrend)
+
+        recordingTrend = detectTrend(relevantDeviations[i], recordingValues[i], originalRecValues[i])
+        recordingTrends.append(recordingTrend)
+
+        textRecTrends.append(numTrendToString(recordingTrend))
+        textRefTrends.append(numTrendToString(referenceTrend))
+    
+    feedbackItems = []
+    differenceThreshold = 0.1 # 20% difference
+    for i in range(len(textRefTrends)):
+        if textRefTrends[i] == textRecTrends[i]:# Same trend
+            if textRefTrends[i] == "maintaining": 
+                feedbackItems.append(-1) # Mark it
+                continue # next item
+            else:
+                # If reference + n% is still smaller than recording, then rec is going too much.
+                if (abs(referenceTrends[i]) * (1+differenceThreshold)) < abs(recordingTrends[i]):
+                    feedbackItems.append((textRecTrends[i] + " too sharply"))
+                elif (abs(referenceTrends[i]) * (1-differenceThreshold)) > abs(recordingTrends[i]):
+                    feedbackItems.append((textRecTrends[i] + " too slowly"))
+                else:
+                    feedbackItems.append(-1)
+        else: # Not the same trend
+            feedbackItems.append((textRecTrends[i], " instead of ", textRefTrends[i]))
+
+    for i in range(len(feedbackItems)):
+        if feedbackItems[i] == -1:
+            relevantDeviations.pop(i)
+            feedbackItems.pop(i)
+
+    feedback = []
+    if len(feedbackItems) > 0:
+        feedback.append(deviationTemplate.format(generateSentence(feedbackItems, " then ")))
+    
+    return feedback, relevantDeviations
 
 # -----------------------
 
