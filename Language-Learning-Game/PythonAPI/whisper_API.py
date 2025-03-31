@@ -9,7 +9,7 @@ device = "cuda"
 batch_size = 16
 compute_type = "float16"
 
-model = whisperx.load_model("large-v2", device, compute_type=compute_type)
+model = whisperx.load_model("turbo", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
@@ -49,15 +49,22 @@ def whisperTranscribe(audioFile):
     result = model.transcribe(audio, batch_size=batch_size, language="zh", task="transcribe")
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     resultAligned = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=True)
-    print("----------------------------")
-    print(resultAligned)
     
     wordsList = []
-    for item in resultAligned["segments"][0]["words"]:
-        if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
-            print(item)
+    print(len(resultAligned["segments"][0]["words"]))
+    for i in range(len(resultAligned["segments"][0]["words"])):
+        item = resultAligned["segments"][0]["words"][i] # get current item
+        
+        # Skip item if it's punctuation transcription
+        item["word"] = ''.join(e for e in item["word"] if e.isalnum()) # Remove all punctuation
+        if item["word"] == '':
             continue
-        print(item)
+        
+        # If transcription is missing any data.
+        if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
+            item = missingDataCorrection(item, i, resultAligned["segments"][0]["words"])
+        
+        # Append the current item's data to the return list of words.
         wordsList.append({
             "word":item["word"],
             "start":item["start"],
@@ -65,9 +72,19 @@ def whisperTranscribe(audioFile):
             "probability":item["score"]
         })
 
-    # remove all punctuation, special charactes & spaces.
+    # remove all punctuation, special charactes & spaces from transcription.
     temp = resultAligned["segments"][0]["text"]
     tempStripped = ''.join(e for e in temp if e.isalnum())
+
+    # Add whole word in there if word segment is missing
+    if (len(tempStripped) <= 2):
+        if (len(tempStripped) > len(wordsList)):
+            wordsList.append({
+                "word":tempStripped,
+                "start":0.0,
+                "end":getDuration("1.wav"),
+                "probability":wordsList[-1]["probability"]
+            })
 
     wordsList[-1]["end"] = getDuration("1.wav")
     # Prepare final transcription result for return
@@ -75,7 +92,6 @@ def whisperTranscribe(audioFile):
         "transcription": tempStripped,
         "words": wordsList
     }
-
     return transcriptionResult
 
 # --------------- HELPER FUNCTIONS ----------------
@@ -87,6 +103,25 @@ def getDuration(file): # Gets the duration of the audio file path provided.
         length = frames/float(rate)
     return length
 
-
+# Fills in the missing transcription using neighboring data.
+def missingDataCorrection(item, index, listOfWords):
+    if index == 0: # First item
+        if len(listOfWords) == 1: # If first item is last item.
+            return item 
+        item["start"] = 0.0
+        item["end"] = listOfWords[index+1]["start"] * 0.9 # -10% from start of next word
+        item["score"] = listOfWords[index+1]["score"]
+        return item
+    if index == len(listOfWords)-1: # Last item
+        item["start"] = listOfWords[index-1]["end"] * 1.1 # end of previous item
+        item["end"] = getDuration("1.wav") # final timestamp
+        item["score"] = listOfWords[index-1]["score"]
+        return item
+    else:
+        item["start"] = listOfWords[index-1]["end"] * 1.1 # end of prev word
+        item["end"] = listOfWords[index+1]["start"] * 0.9 # start of next word
+        item["score"] = listOfWords[index+1]["score"] # any will work.
+        return item
+    
 if __name__ == "__main__":
     uvicorn.run("whisper_API:app", host="0.0.0.0", port=8000, reload=True)
