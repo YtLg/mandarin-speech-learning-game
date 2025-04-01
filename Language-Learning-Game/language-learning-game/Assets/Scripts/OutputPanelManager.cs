@@ -92,7 +92,10 @@ public class OutputPanelManager : MonoBehaviour
         {
                 // NOTE: listener of prefab buttons are defined within transcriptbuttondata
                 WordData idealWord = idealData.words[i];
+                idealWord.probability += 0.01f;
 
+
+                
                 GameObject button = Instantiate(transcriptButtonPrefab, transcriptionArea.transform);
                 transcriptButtonList.Add(button);
                 TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
@@ -100,7 +103,7 @@ public class OutputPanelManager : MonoBehaviour
                 
                 transcriptButtonData.textAudio = choiceAudio;
                 transcriptButtonData.buttonTextData = idealWord.word;
-                transcriptButtonData.expectedProb = idealWord.probability;
+                transcriptButtonData.expectedProb = (float)(idealWord.probability + 0.001);
                 transcriptButtonData.startTime = idealWord.start;
                 transcriptButtonData.endTime = idealWord.end;
                 transcriptButtonData.actualProb = 0.0f; // default for user input doesn't match.
@@ -152,7 +155,7 @@ public class OutputPanelManager : MonoBehaviour
                         count += tempCount;
                     }
 
-                    transcriptButtonData.actualProb += cumulativeSum / count;
+                    transcriptButtonData.actualProb += (float)((cumulativeSum / count) + 0.001);
                 }
 
             transcriptButtonData.SetText();
@@ -245,6 +248,7 @@ public class OutputPanelManager : MonoBehaviour
     string recordedText = CleanMandarinText(recording.word);
         if (idealText.Contains(recordedText) || idealText.Contains(recordedText))
         {
+            recording.probability += (float)0.001;
             return (recording.probability/ideal.probability, 0);
         }
         return (0, -1);

@@ -8,10 +8,11 @@ import whisperx
 device = "cuda"
 batch_size = 16
 compute_type = "float16"
-
+missing = 0
 model = whisperx.load_model("turbo", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
+
 
 
 # print(torch.cuda.device_count())
@@ -45,6 +46,7 @@ async def transcribeAudio(file: UploadFile = File(...)):
 
 # Transcribes the audio data and aligns it to get an accurate timestamp.
 def whisperTranscribe(audioFile):
+    missing = 0
     audio = whisperx.load_audio(audioFile)
     result = model.transcribe(audio, batch_size=batch_size, language="zh", task="transcribe")
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
@@ -62,6 +64,7 @@ def whisperTranscribe(audioFile):
         
         # If transcription is missing any data.
         if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
+            missing += 1
             item = missingDataCorrection(item, i, resultAligned["segments"][0]["words"])
         
         # Append the current item's data to the return list of words.
@@ -77,14 +80,13 @@ def whisperTranscribe(audioFile):
     tempStripped = ''.join(e for e in temp if e.isalnum())
 
     # Add whole word in there if word segment is missing
-    if (len(tempStripped) <= 2):
-        if (len(tempStripped) > len(wordsList)):
-            wordsList.append({
-                "word":tempStripped,
-                "start":0.0,
-                "end":getDuration("1.wav"),
-                "probability":wordsList[-1]["probability"]
-            })
+    if missing > 0:
+        wordsList.append({
+            "word":tempStripped,
+            "start":0.0,
+            "end":getDuration("1.wav"),
+            "probability":wordsList[-1]["probability"]
+        })
 
     wordsList[-1]["end"] = getDuration("1.wav")
     # Prepare final transcription result for return

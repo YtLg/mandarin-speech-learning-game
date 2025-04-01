@@ -3,11 +3,13 @@ from fastapi.responses import JSONResponse
 from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
-
+import noisereduce as nr
+from scipy.io import wavfile
 from pydub import AudioSegment
 import parselmouth
 import numpy as np
 from scipy.ndimage.interpolation import zoom
+import copy
 
 tone = 1
 
@@ -15,14 +17,13 @@ originalReferenceData = []
 originalRecordingData = []
 
 template1 = "Your tone seems to be {} throughout your speech just like the reference! Well done!"
-template2 = "Your tone seems to be {} throughout your speech, however it should be {} instead! Try to make your pitch contour display a similar contour to the reference line as shown on the graph!"
+template2 = "Your tone seems to be {} throughout your speech, however it should be {} instead!"
 template3 = "Your contour seems to exhibit {}. It should exhibit {} instead!"
 deviationTemplate = "Going from left to right, your deviations show that your tone is {}!"
 
 app1 = FastAPI()
 
-flattenThreshold = 30 # Hz Definition of threshold for flattenValues
-sizeThreshold = 0.05 # 5% / # threshold of difference for collapsing difference array
+sizeThreshold = 0.045 # 4.5% / # threshold of difference for collapsing difference array
 
 class TimestampArray(BaseModel):
     timestamps: list = []
@@ -55,6 +56,12 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     segment = audio[timestampStart*1000:timestampEnd*1000]
     segment.export("croppedReference.wav", format="wav")
 
+    # load data
+    rate, data = wavfile.read("recording.wav")
+    # perform noise reduction
+    reduced_noise = nr.reduce_noise(y=data, sr=rate)
+    wavfile.write("recordingReduced.wav", rate, reduced_noise)
+
     # 2: Check for Excessive noise + Silence
         # Cut out silence <- DONE IN PARSELMOUTH LATER //
         # if noise exceeds a certain amount, return with a null value for failure. <-!!! TODO !!!
@@ -62,7 +69,7 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     # 3: Processing Audio + Pitch Data
 
     # Converts the file specified by filepath to pitch values + timestamps.
-    recordingInfo, recordingPitch, recordingTimes = fileToPitch("recording.wav")
+    recordingInfo, recordingPitch, recordingTimes = fileToPitch("recordingReduced.wav")
     referenceInfo, referencePitch, referenceTimes = fileToPitch("croppedReference.wav")
    
     # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
@@ -81,45 +88,48 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     minMaxRecording = minMaxNormalise(interpolatedRecordingResampled)
     minMaxReference = minMaxNormalise(interpolatedReferenceResampled)
 
+    
     # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only tone 3.
-    minMaxRecording = flattenValues(minMaxRecording, interpolatedRecordingResampled)
-    minMaxReference = flattenValues(minMaxReference, interpolatedReferenceResampled)    
-
+    minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
+    minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)    
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReference, minMaxRecording, 0.3)
-    print(allMajorDifferences)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.25)
+    
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
-    score = getCorrectness(allMajorDifferences, minMaxRecording)
+    score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
+
+    minMaxRecordingFlattenCopy = copy.deepcopy(minMaxRecordingFlatten)
+    minMaxReferenceFlattenCopy = copy.deepcopy(minMaxReferenceFlatten)
 
     # Generates feedback from the processed data.
     feedback = []
     if tone == 0:
-        feedback = compareNeutral(minMaxReference, referenceTimes, minMaxRecording, recordingTimes)
+        feedback = compareNeutral(minMaxReferenceFlatten, referenceTimes, minMaxRecordingFlatten, recordingTimes)
         print(feedback)
     else:
-        feedback = compareToneTrends(minMaxReference, referenceTimes, minMaxRecording, recordingTimes, score)
+        feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimes, minMaxRecordingFlattenCopy, recordingTimes, score)
         print(feedback)
 
-    # Only do this if score is under 65
+    # Only do this if score is under 65?
+    # if score < 70:
     relevantDeviations = []
-    if score < 65:
-        diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReference, minMaxRecording, relevantDifferences)
-        if len(diffFeedback) > 0:
-            feedback.append("Highlighted in red you will see points of major deviations in your tone!")
-            feedback.append(diffFeedback)
+    diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReferenceFlattenCopy, minMaxRecordingFlattenCopy, relevantDifferences)
+    if len(diffFeedback) > 0:
+        feedback.append("Highlighted in red you will see points of major deviations in your tone!")
+        for i in diffFeedback:
+            feedback.append(i)
 
     # Need to return: pitches / times / major differences
     analysisResult = {
-        "pitchRecording": minMaxRecording.tolist(),
+        "pitchRecording": minMaxRecordingFlatten.tolist(),
         "timestampsRecording": recordingTimesResampled.tolist(),
-        "pitchReference": minMaxReference.tolist(),
+        "pitchReference": minMaxReferenceFlatten.tolist(),
         "timestampsReference": referenceTimesResampled.tolist(),
         "accuracyScore": score,
         "relevantDeviations": relevantDeviations,
         "feedbackList": feedback
     }
 
-    # print(analysisResult)
     return JSONResponse(content=analysisResult)
 
 
@@ -178,8 +188,13 @@ def minMaxNormalise(pitchA):
     normalisedA = (pitchA- minVal) / (maxVal - minVal)
     return normalisedA
 
-def flattenValues(normalisedValues, originalvalues):
+def flattenValues(normalisedValues, originalvalues, flattenThreshold):
+    print("hello!")
+    print(originalvalues)
+    print("max", max(originalvalues))
+    print("min", min(originalvalues))
     if max(originalvalues) - min(originalvalues) <= flattenThreshold:
+        print("Flattening!")
         for i in range(len(normalisedValues)):
             normalisedValues[i] = ((normalisedValues[i] - 0.5) * 0.1) + 0.5
     return normalisedValues
@@ -187,15 +202,11 @@ def flattenValues(normalisedValues, originalvalues):
 def getDifferences(pitchA, pitchB, threshold=0.25):
     pitchDifferences = pitchA - pitchB
     
-    # Truncates to 3.dp for clarity when debugging.
-    for i in range(len(pitchDifferences)-1):
-        pitchDifferences[i] = '%.3f'%(pitchDifferences[i])
-    
     bigDifferencesIndexes = np.where(np.abs(pitchDifferences)>threshold)[0] # Creates an array where those differences are larger than a threshold.
     
     # Groups consequtive indexes, then groups arrays within a certain range of each other
-    diffIndexesConsequtive = groupByConsequtive(bigDifferencesIndexes)    
-    arraySizeThreshold = round(len(pitchDifferences *sizeThreshold))
+    diffIndexesConsequtive = groupByConsequtive(bigDifferencesIndexes)
+    arraySizeThreshold = round(len(pitchDifferences) *sizeThreshold)
     groupedDiffIndexes = groupNeighbours(diffIndexesConsequtive, arraySizeThreshold)
 
     # Removes any difference arrays that are below 10% of pitch data size to avoid noise.
@@ -266,8 +277,12 @@ def compareNeutral(referencePitchValues, referenceTimes, recordingPitchValues, r
 def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues, recordingTimes, percent):
     feedback = []
     referenceTrends, recordingTrends = getTrend(referencePitchValues, recordingPitchValues, 3) # Computes the trend of data for each "n" amount of segments.
+    print("reference trends are", referenceTrends)
+    print("recording trends are", recordingTrends)
     referenceTrends = removeDuplicateConsequtive(referenceTrends)
     recordingTrends = removeDuplicateConsequtive(recordingTrends)   
+    print("reference trends are2", referenceTrends)
+    print("recording trends are2", recordingTrends)
 
     #compare length -------
     feedback.append(compareLength(referenceTimes, recordingTimes))
@@ -275,16 +290,13 @@ def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues
     # Compare Values -------
     print(percent)
     # Fallback to avoid unhelpful feedback if accuracy is high:
-    if percent > 70:
+    if percent > 90:
         feedback.append(template1.format(generateSentence(referenceTrends, " then ")))
         return feedback
 
     else:
         # CASE: Tone isn't flat
-        generatedFeedback = generateFeedback(referenceTrends, recordingTrends, percent) #Generates feedback from the trends.
-        if percent < 61:
-            feedback.append("Your Accuracy score seems low, check if your speech exhibits the same trends at similar time intervals to the green line!")
-            
+        generatedFeedback = generateFeedback(referenceTrends, recordingTrends) #Generates feedback from the trends.
         feedback = feedback + generatedFeedback
         return feedback
 
@@ -300,11 +312,12 @@ def getTrend(referencePitchValues, recordingPitchValues, segments):
     segmentedRecordingOriginal = segmentData(originalRecordingData, segments)
     segmentedReferenceOriginal = segmentData(originalReferenceData, segments)
 
-
     for i in range(len(segmentedRecordingPitches)):
         indexes = [i for i in range(len(segmentedRecordingPitches[i]))]
         trend = detectTrend(indexes, segmentedRecordingPitches[i], segmentedRecordingOriginal[i])
         trendRef = detectTrend(indexes, segmentedReferencePitches[i], segmentedReferenceOriginal[i])
+        print("recTrends = ", trend)
+        print("trendRef=", trendRef)
         recordingTrends.append(numTrendToString(trend))
         referenceTrends.append(numTrendToString(trendRef))
     
@@ -319,19 +332,19 @@ def removeDuplicateConsequtive(trends): # Removes consequtive equivalent items
     return processedTrends
 
 def detectTrend(indexArray, dataArray, originalData, order=1):
-    dataArray = flattenValues(dataArray, originalData)
+    # dataArray = flattenValues(dataArray, originalData, 30)
     result = np.polyfit(indexArray, list(dataArray), order)
     slope = result[-2]
     return float(slope)
 
 # Converts the data gotten from detectTrend + getTrend into word feedbck.
 def numTrendToString(trendVal):
-    if trendVal >= 0.001: # > 0.001 ranges is rising slope.
+    if trendVal >= 0.001: # > 0.1 ranges is rising slope.
         trend = "rising"
-    elif abs(trendVal) < 0.001: #0.000 ranges is a relatively maintaining/flat slope.
+    elif abs(trendVal) < 0.001: #0.1 ranges is a relatively maintaining/flat slope.
         trend = "maintaining"
     else:
-        trend = "dropping" # lower than -0.001 is decreasing slope.
+        trend = "dropping" # lower than -0.1 is decreasing slope.
     return trend
 
 def segmentData(data, segements):
@@ -342,7 +355,7 @@ def segmentData(data, segements):
 
 def generateFeedback(referenceTrends,recordingTrends):
     feedback = []
-
+    
     sameTrends = True
     if len(referenceTrends) == len(recordingTrends): # Only if trends are equal in length are they equivalent
         for i in range(len(referenceTrends)): 
@@ -410,7 +423,7 @@ def generateDifferenceFeedback(referencePitchValues, recordingPitchValues, relev
         textRefTrends.append(numTrendToString(referenceTrend))
     
     feedbackItems = []
-    differenceThreshold = 0.1 # 20% difference
+    differenceThreshold = 0.1 # 10% difference
     for i in range(len(textRefTrends)):
         if textRefTrends[i] == textRecTrends[i]:# Same trend
             if textRefTrends[i] == "maintaining": 
@@ -425,9 +438,9 @@ def generateDifferenceFeedback(referencePitchValues, recordingPitchValues, relev
                 else:
                     feedbackItems.append(-1)
         else: # Not the same trend
-            feedbackItems.append((textRecTrends[i], " instead of ", textRefTrends[i]))
+            feedbackItems.append((textRecTrends[i] + " instead of " + textRefTrends[i]))
 
-    for i in range(len(feedbackItems)):
+    for i in range(len(feedbackItems) - 1, -1, -1):
         if feedbackItems[i] == -1:
             relevantDeviations.pop(i)
             feedbackItems.pop(i)

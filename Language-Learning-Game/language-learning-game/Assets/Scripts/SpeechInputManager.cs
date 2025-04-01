@@ -139,6 +139,7 @@ public class AnalysisData
     public float[] pitchReference;
     public float[] timestampsReference;
     public float accuracyScore;
+    public float[][] relevantDeviations;
     public string[] feedbackList;
 }
 
