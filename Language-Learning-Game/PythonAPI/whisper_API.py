@@ -4,6 +4,8 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import uvicorn
 import whisperx
+from dragonmapper import hanzi
+from deep_translator import GoogleTranslator
 
 device = "cuda"
 batch_size = 16
@@ -41,6 +43,16 @@ async def transcribeAudio(file: UploadFile = File(...)):
 
     print("Transcription: Transcription complete and returning!")
     return JSONResponse(content=transcription)
+
+
+@app.post("/getTranslations")
+async def getTranslations(character: str):
+    print("Translating...")
+    pinyinWord = hanzi.to_pinyin(character)
+    englishWord =  GoogleTranslator(source='auto', target='en').translate(character)  # output -> Weiter so, du bist großartig
+    print(englishWord)
+    wordTranslations  = {"pinyin":pinyinWord, "english":englishWord}
+    return wordTranslations
 
 # ------------- AUDIO PROCESSING FUNCTIONS --------------------
 

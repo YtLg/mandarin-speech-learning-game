@@ -3,6 +3,7 @@ using UnityEngine.Networking;
 using System.Threading.Tasks;
 using Unity.Sentis;
 using System.Globalization;
+using Unity.VisualScripting;
 
 public class ApiManager : MonoBehaviour
 {
@@ -41,6 +42,30 @@ public class ApiManager : MonoBehaviour
         form.AddBinaryData("referenceFile", reference, "reference_audio.wav", "audio/wav");
         form.AddBinaryData("recordingFile", recording, "recording_audio.wav", "audio/wav");
         
+        using UnityWebRequest request = UnityWebRequest.Post(url, form);
+        var operation = request.SendWebRequest();
+
+        await operation;
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            string result = request.downloadHandler.text;
+            Debug.Log("Result: " + result);
+            return result;
+        }
+        else
+        {
+            Debug.LogError($"Error: {request.error}, Status Code: {request.responseCode}");
+            Debug.LogError($"Server Response: {request.downloadHandler.text}");
+            return null;
+        }
+    }
+
+
+    public async Task<string> TranslateCharacter(string character)
+    {
+        string url = $"{urlWhisper}/getTranslations" + $"?character={UnityWebRequest.EscapeURL(character)}";
+        WWWForm form = new();
+
         using UnityWebRequest request = UnityWebRequest.Post(url, form);
         var operation = request.SendWebRequest();
 

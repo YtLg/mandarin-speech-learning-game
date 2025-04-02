@@ -1,0 +1,137 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9e3b0ff48f783147ab5b832b5b9302b, type: 3}
+  m_Name: cashier
+  m_EditorClassIdentifier: 
+  npcName: 
+  dialogueElementList:
+  - englishText: Hello!
+    pinyinText: "N\u01D0 h\u01CEo!"
+    chineseText: "\u4F60\u597D!"
+    dialogueAudio: {fileID: 8300000, guid: b74e278ffdd9a484d9617d8db8b1b262, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: Hello!
+      pinyinChoice: "N\u01D0 h\u01CEo!"
+      chineseChoice: "\u4F60\u597D!"
+      choiceAudio: {fileID: 8300000, guid: b74e278ffdd9a484d9617d8db8b1b262, type: 3}
+    nextElementID: 01000000
+  - englishText: ...
+    pinyinText: ...
+    chineseText: ...
+    dialogueAudio: {fileID: 0}
+    hasChoice: 1
+    choices:
+    - englishChoice: how are you?
+      pinyinChoice: "N\u01D0 h\u01CEo ma?"
+      chineseChoice: "\u4F60\u597D\u5417\uFF1F"
+      choiceAudio: {fileID: 8300000, guid: 95b045f56666543418896836c77169cc, type: 3}
+    - englishChoice: What is your name?
+      pinyinChoice: "N\u01D0 ji\xE0o sh\xE9nme m\xEDngz\xEC? "
+      chineseChoice: "\u4F60\u53EB\u4EC0\u4E48\u540D\u5B57\uFF1F"
+      choiceAudio: {fileID: 8300000, guid: f75b1820f46501340bba06fa8d04bdec, type: 3}
+    - englishChoice: Do you have any water?
+      pinyinChoice: "N\u01D0 y\u01D2u shu\u01D0 ma? "
+      chineseChoice: "\u4F60\u6709\u6C34\u5417\uFF1F"
+      choiceAudio: {fileID: 8300000, guid: 68f05d30506e56845acd14cc5e0c8e3f, type: 3}
+    - englishChoice: Goodbye!
+      pinyinChoice: "Z\xE0iji\xE0n "
+      chineseChoice: "\u518D\u89C1"
+      choiceAudio: {fileID: 8300000, guid: 2198d6b69db8d004793629a39c350983, type: 3}
+    nextElementID: 02000000030000000400000008000000
+  - englishText: I'm very good! And you?
+    pinyinText: "W\u01D2 h\u011Bn h\u01CEo, n\u01D0 ne? "
+    chineseText: "\u6211\u5F88\u597D\uFF0C \u4F60\u5462\uFF1F"
+    dialogueAudio: {fileID: 8300000, guid: eb68020bb972b724091ba3528f2ad008, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: I'm very good too!
+      pinyinChoice: "W\u01D2 y\u011B h\u011Bn h\u01CEo "
+      chineseChoice: "\u6211\u4E5F\u5F88\u597D"
+      choiceAudio: {fileID: 8300000, guid: e0b917ce2453b1042ad581134268977c, type: 3}
+    - englishChoice: 'I''m not good '
+      pinyinChoice: "W\u01D2 b\xF9 h\u01CEo"
+      chineseChoice: "\u6211\u4E0D\u597D"
+      choiceAudio: {fileID: 8300000, guid: fc96f5d7d52e2b54d998877944a06b8a, type: 3}
+    nextElementID: 0100000001000000
+  - englishText: I'm called Ma Dawei
+    pinyinText: "W\u01D2 ji\xE0o m\u01CE d\xE0 w\xE9i "
+    chineseText: "\u6211\u53EB\u9A6C\u5927\u4E3A"
+    dialogueAudio: {fileID: 8300000, guid: 7dd64feaf9a4051449978f6e113c879d, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: It's very nice to meet you!
+      pinyinChoice: "W\u01D2 r\xE8nsh\xED n\u01D0 h\u011Bn g\u0101ox\xECng"
+      chineseChoice: "\u6211\u8BA4\u8BC6\u4F60\u5F88\u9AD8\u5174"
+      choiceAudio: {fileID: 8300000, guid: f60bd1999e7073d4b9c2fb65b7970acf, type: 3}
+    nextElementID: 01000000
+  - englishText: Yes, I sell water, do you want to buy?
+    pinyinText: "Sh\xEC er, w\u01D2 m\xE0i shu\u01D0, n\u01D0 xi\u01CEng m\u01CEi
+      ma?"
+    chineseText: "\u662F\u513F\uFF0C\u6211\u5356\u6C34\uFF0C \u4F60\u60F3\u4E70\u5417\uFF1F"
+    dialogueAudio: {fileID: 8300000, guid: 2b13ee35a7cb2a846a356e045972eab8, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: I want to buy water
+      pinyinChoice: "W\u01D2 xi\u01CEng m\u01CEi shu\u01D0 "
+      chineseChoice: "\u6211\u60F3\u4E70\u6C34"
+      choiceAudio: {fileID: 8300000, guid: 1bf2b873c2fa31c41a6e1b53ae2d3783, type: 3}
+    - englishChoice: I don't want to buy water
+      pinyinChoice: "W\u01D2 b\xF9xi\u01CEng m\u01CEi shu\u01D0 "
+      chineseChoice: "\u6211\u4E0D\u60F3\u4E70\u6C34"
+      choiceAudio: {fileID: 8300000, guid: b0ad5767f97ec39428cac7dfb8ad243a, type: 3}
+    nextElementID: 0500000007000000
+  - englishText: OK, this is thirty yuan, twenty-nine cents.
+    pinyinText: "H\u01CEo de, zh\xE8ge sh\xEC s\u0101nsh\xED yu\xE1n, \xE8rsh\xEDji\u01D4
+      f\u0113n"
+    chineseText: "\u597D\u7684\uFF0C \u8FD9\u4E2A\u662F \u4E09\u5341\u5143\uFF0C\u4E8C\u5341\u4E5D\u5206"
+    dialogueAudio: {fileID: 8300000, guid: 830204ef4a6d61642a27a95b9075c390, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: 'too expensive '
+      pinyinChoice: "T\xE0i gu\xEC "
+      chineseChoice: "\u592A\u8D35"
+      choiceAudio: {fileID: 8300000, guid: e2460f84139346140bd352c1e4f18e4e, type: 3}
+    - englishChoice: "very cheap\uFF01"
+      pinyinChoice: "H\u011Bn pi\xE1ny\xED "
+      chineseChoice: "\u5F88\u4FBF\u5B9C"
+      choiceAudio: {fileID: 8300000, guid: dc63cb231001fcb4990039589347eaea, type: 3}
+    nextElementID: 0600000006000000
+  - englishText: ' Do you want to buy it or not buy it?'
+    pinyinText: "N\u01D0 xi\u01CEng m\u01CEi b\xF9xi\u01CEng m\u01CEi? "
+    chineseText: "\u4F60\u60F3\u4E70\u4E0D\u60F3\u4E70\uFF1F"
+    dialogueAudio: {fileID: 8300000, guid: 3e9e8101020fe5b489dfeb7e4c6a4485, type: 3}
+    hasChoice: 1
+    choices:
+    - englishChoice: I want to buy it
+      pinyinChoice: "W\u01D2 xi\u01CEng m\u01CEi "
+      chineseChoice: "\u6211\u60F3\u4E70"
+      choiceAudio: {fileID: 8300000, guid: 62f353af9361f5c44a1ec8fc3fc94a9c, type: 3}
+    - englishChoice: I don't want to buy it
+      pinyinChoice: "W\u01D2 b\xF9xi\u01CEng m\u01CEi "
+      chineseChoice: "\u6211\u4E0D\u60F3\u4E70"
+      choiceAudio: {fileID: 8300000, guid: b0ad5767f97ec39428cac7dfb8ad243a, type: 3}
+    nextElementID: 0700000007000000
+  - englishText: Ok.
+    pinyinText: "H\u01CEo de "
+    chineseText: "\u597D\u7684"
+    dialogueAudio: {fileID: 8300000, guid: 3bbc3f62ed507de4bacabae4b6b43bfc, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 
+  - englishText: Goodbye!
+    pinyinText: "Z\xE0iji\xE0n"
+    chineseText: "\u518D\u89C1"
+    dialogueAudio: {fileID: 8300000, guid: 2198d6b69db8d004793629a39c350983, type: 3}
+    hasChoice: 0
+    choices: []
+    nextElementID: 
