@@ -870,7 +870,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ea0b9aa83ad369a46848854b60766891, type: 2}
+  - {fileID: 2100000, guid: e48cb2cd521e8164bb681e7616190049, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -29717,6 +29717,7 @@ MonoBehaviour:
   speechInputManager: {fileID: 1660284471}
   practicePanelOutputManager: {fileID: 833534899}
   audioManager: {fileID: 1568863748}
+  apiManager: {fileID: 0}
 --- !u!4 &1809787875
 Transform:
   m_ObjectHideFlags: 0

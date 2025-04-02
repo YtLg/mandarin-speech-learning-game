@@ -13,6 +13,7 @@ public class ApiManager : MonoBehaviour
     // SENDS AND RECIEVES REQUESTS TO/FROM WHISPER API
     public async Task<string> SendAudio(byte[] audioData)
     {
+        Debug.Log("Entering API manager for whisper");
         WWWForm form = new();
         form.AddBinaryData("file", audioData, "recorded_audio.wav", "audio/wav");
         using UnityWebRequest request = UnityWebRequest.Post(urlWhisper + "/transcribeAudio", form);
