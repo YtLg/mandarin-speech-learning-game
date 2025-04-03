@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class SpeechInputManager : MonoBehaviour
 {
@@ -48,6 +49,10 @@ public class SpeechInputManager : MonoBehaviour
     {
         var result = await apiManager.SendAudio(recordedAudio);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
+
+        File.WriteAllBytes(data.transcription+"Whisper.wav", recordedAudio);
+
+
         return (data);
 
         //Debug.Log("Transription is:" + data.transcription);
@@ -67,7 +72,20 @@ public class SpeechInputManager : MonoBehaviour
         byte[] wavData = WriteToWav(samples1, transcriptButtonData.textAudio.frequency, transcriptButtonData.textAudio.channels);
 
         var result = await apiManager.AnalyseAudio(transcriptButtonData.startTime, transcriptButtonData.endTime, wavData, bytes);
+
+
+        string baseFileName = transcriptButtonData.buttonTextData;
+        string filePath = baseFileName + "Analysis.wav";
+        int counter = 1;
+        while (File.Exists(filePath))
+        {
+            filePath = baseFileName + counter + "Analysis.wav";
+            counter++;
+        }
+        File.WriteAllBytes(filePath, bytes);
+
         AnalysisData analysisData = JsonConvert.DeserializeObject<AnalysisData>(result);
+        Debug.Log($"ParselData: {JsonConvert.SerializeObject(analysisData, Formatting.Indented)}");
         return analysisData;
     }
 
@@ -139,7 +157,7 @@ public class AnalysisData
     public float[] pitchReference;
     public float[] timestampsReference;
     public float accuracyScore;
-    public float[][] relevantDeviations;
+    public float[] relevantDeviations;
     public string[] feedbackList;
 }
 

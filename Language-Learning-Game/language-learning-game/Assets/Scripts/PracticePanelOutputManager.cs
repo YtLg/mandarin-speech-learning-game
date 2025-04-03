@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using XCharts.Runtime;
 using System;
 using TMPro;
+using System.Linq;
+using System.Reflection.Emit;
 
 public class PracticePanelOutputManager : MonoBehaviour
 {
@@ -69,19 +71,54 @@ public class PracticePanelOutputManager : MonoBehaviour
         
         for(int i = 0; i < analysisData.feedbackList.Length; i++)
         {
-            Debug.Log(analysisData.feedbackList[i]);
             feedbackText.text += analysisData.feedbackList[i] + "<br>";
         }
 
+        // CHART SETUP -------------------------
         lineChart.RemoveAllSerie();
 
+        // Legend, Axis + Title text setup because manual setup in inspector is reset per refresh:
+        Legend legend = lineChart.GetChartComponent<Legend>();
+        Title title = lineChart.GetChartComponent<Title>();
+        XAxis xAxis = lineChart.GetChartComponent<XAxis>();
+        YAxis yAxis = lineChart.GetChartComponent<YAxis>();
+
+        legend.itemWidth = 20;
+        legend.itemHeight = 15;
+        legend.labelStyle.textStyle.fontSize = 30;
+        legend.labelStyle.textStyle.fontStyle = FontStyle.Bold;
+        legend.labelStyle.width = 20;
+        legend.labelStyle.height = 20;
+        legend.itemGap = 60;
+
+        legend.positions.Add(new Vector3(-300,300,0));
+        legend.positions.Add(new Vector3(100, 300, 0));
+
+        title.labelStyle.textStyle.fontSize = 50;
+        title.labelStyle.textStyle.fontStyle = FontStyle.Bold;
+
+        yAxis.axisName.labelStyle.rotate = 90;
+        yAxis.axisName.labelStyle.offset = new Vector3(-50, -250, 0);
+        yAxis.axisName.labelStyle.textStyle.fontSize = 25;
+        yAxis.axisName.labelStyle.textStyle.fontStyle = FontStyle.Bold;
+
+        xAxis.axisName.labelStyle.offset = new Vector3(-415, -40, 0);
+        xAxis.axisName.labelStyle.textStyle.fontSize = 25;
+        xAxis.axisName.labelStyle.textStyle.fontStyle = FontStyle.Bold;
 
         Serie serie1 = lineChart.AddSerie<Line>("Recording Pitch");
+        serie1.symbol.show = true;
         serie1.stack = "PitchStack1";
         for (int i = 0; i < analysisData.pitchRecording.Length; i++) {
             float temp = MathF.Round(analysisData.timestampsRecording[i] - analysisData.timestampsRecording[0], 2);
-            print(temp);
-            serie1.AddXYData(temp, analysisData.pitchRecording[i]);
+            SerieData datapoint = serie1.AddXYData(temp, analysisData.pitchRecording[i]);
+            if (analysisData.relevantDeviations.Contains(i))
+            {
+                datapoint.EnsureComponent<ItemStyle>();
+                datapoint.EnsureComponent<LineStyle>();
+                datapoint.itemStyle.color = Color.red;
+                datapoint.lineStyle.color = Color.red;
+            }
         }
 
         Serie serie2 = lineChart.AddSerie<Line>("Reference Pitch");
@@ -89,13 +126,24 @@ public class PracticePanelOutputManager : MonoBehaviour
         for (int i = 0; i < analysisData.pitchReference.Length; i++)
         {
             float temp = MathF.Round(analysisData.timestampsReference[i] - analysisData.timestampsReference[0], 2);
-            print(temp);
-            serie2.AddXYData(temp, analysisData.pitchReference[i]);
-
+            SerieData datapoint = serie2.AddXYData(temp, analysisData.pitchReference[i]);
+            if (analysisData.relevantDeviations.Contains(i))
+            {
+                datapoint.EnsureComponent<ItemStyle>(); // There is no component by default
+                datapoint.EnsureComponent<LineStyle>(); // So ensure creates one if there is none.
+                datapoint.itemStyle.color = Color.red;
+                datapoint.lineStyle.color = Color.red;
+            }
+            
+            //datapoint.symbol.color = Color.red;
+            //datapoint.symbol.size = 20;
+            //datapoint.symbol.type = SymbolType.Diamond;
         }
 
+        Debug.Log(analysisData.relevantDeviations);
         lineChart.RefreshChart();
 
+        // --------------------------------------------
         practicePanelOutput.SetActive(true);
     }
 

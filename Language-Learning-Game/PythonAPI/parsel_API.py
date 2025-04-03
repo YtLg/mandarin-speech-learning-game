@@ -111,14 +111,20 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
         print(feedback)
 
     # Only do this if score is under 65?
-    # if score < 70:
     relevantDeviations = []
-    diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReferenceFlattenCopy, minMaxRecordingFlattenCopy, relevantDifferences)
-    if len(diffFeedback) > 0:
-        feedback.append("Highlighted in red you will see points of major deviations in your tone!")
-        for i in diffFeedback:
-            feedback.append(i)
+    if score < 70:
+        diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReferenceFlattenCopy, minMaxRecordingFlattenCopy, relevantDifferences)
+        if len(diffFeedback) > 0:
+            feedback.append("Highlighted in red you will see points of major deviations in your tone!")
+            for i in diffFeedback:
+                feedback.append(i)
 
+    # Collapse relevant deviations back into 1d array.
+    relevantDeviationsCollapsed = []
+    for i in relevantDeviations:
+        relevantDeviationsCollapsed += i
+
+    print(relevantDeviationsCollapsed)
     # Need to return: pitches / times / major differences
     analysisResult = {
         "pitchRecording": minMaxRecordingFlatten.tolist(),
@@ -126,7 +132,7 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
         "pitchReference": minMaxReferenceFlatten.tolist(),
         "timestampsReference": referenceTimesResampled.tolist(),
         "accuracyScore": score,
-        "relevantDeviations": relevantDeviations,
+        "relevantDeviations": relevantDeviationsCollapsed,
         "feedbackList": feedback
     }
 
@@ -203,7 +209,8 @@ def getDifferences(pitchA, pitchB, threshold=0.25):
     pitchDifferences = pitchA - pitchB
     
     bigDifferencesIndexes = np.where(np.abs(pitchDifferences)>threshold)[0] # Creates an array where those differences are larger than a threshold.
-    
+    if len(bigDifferencesIndexes) == 0:
+        return [], []
     # Groups consequtive indexes, then groups arrays within a certain range of each other
     diffIndexesConsequtive = groupByConsequtive(bigDifferencesIndexes)
     arraySizeThreshold = round(len(pitchDifferences) *sizeThreshold)
@@ -225,6 +232,7 @@ def getCorrectness(majorDeviations,recordingValues):
 
 def groupByConsequtive(diffIndexes):
     diffIndexes = [int(x) for x in diffIndexes] # Fix formatting issue
+    print("Diff indexes are:", diffIndexes)
     groupedArr = [[diffIndexes[0]]]
     for x in diffIndexes[1:]:
         if x == groupedArr[-1][-1] + 1:
@@ -291,6 +299,7 @@ def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues
     print(percent)
     # Fallback to avoid unhelpful feedback if accuracy is high:
     if percent > 90:
+        print("TOO CORRECT, SKIP EVAL", percent)
         feedback.append(template1.format(generateSentence(referenceTrends, " then ")))
         return feedback
 
@@ -316,8 +325,6 @@ def getTrend(referencePitchValues, recordingPitchValues, segments):
         indexes = [i for i in range(len(segmentedRecordingPitches[i]))]
         trend = detectTrend(indexes, segmentedRecordingPitches[i], segmentedRecordingOriginal[i])
         trendRef = detectTrend(indexes, segmentedReferencePitches[i], segmentedReferenceOriginal[i])
-        print("recTrends = ", trend)
-        print("trendRef=", trendRef)
         recordingTrends.append(numTrendToString(trend))
         referenceTrends.append(numTrendToString(trendRef))
     
@@ -360,7 +367,10 @@ def generateFeedback(referenceTrends,recordingTrends):
     if len(referenceTrends) == len(recordingTrends): # Only if trends are equal in length are they equivalent
         for i in range(len(referenceTrends)): 
             if referenceTrends[i] != recordingTrends[i]: # Checks each individual element, so order matters vs comparison on whole array
+                print("non same detected")
                 sameTrends = False
+    else:
+        sameTrends = False
 
     # Only provide a confirmation message of positive feedback if everything is correct (indicated by count being equal to size of reference trends & referenceTrends isn't null)
     if sameTrends == True:
@@ -422,8 +432,11 @@ def generateDifferenceFeedback(referencePitchValues, recordingPitchValues, relev
         textRecTrends.append(numTrendToString(recordingTrend))
         textRefTrends.append(numTrendToString(referenceTrend))
     
+    print(textRefTrends)
+    print(textRecTrends)
+
     feedbackItems = []
-    differenceThreshold = 0.1 # 10% difference
+    differenceThreshold = 0.2 # 20% difference
     for i in range(len(textRefTrends)):
         if textRefTrends[i] == textRecTrends[i]:# Same trend
             if textRefTrends[i] == "maintaining": 
@@ -440,6 +453,7 @@ def generateDifferenceFeedback(referencePitchValues, recordingPitchValues, relev
         else: # Not the same trend
             feedbackItems.append((textRecTrends[i] + " instead of " + textRefTrends[i]))
 
+    # Goes through array backwards to avoid issue of missing index after popping.
     for i in range(len(feedbackItems) - 1, -1, -1):
         if feedbackItems[i] == -1:
             relevantDeviations.pop(i)

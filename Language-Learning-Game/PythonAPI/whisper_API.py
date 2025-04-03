@@ -1,4 +1,5 @@
 import contextlib
+import torch
 import wave
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
@@ -16,9 +17,10 @@ model = whisperx.load_model("turbo", device, compute_type=compute_type)
 app = FastAPI()
 
 
-
-# print(torch.cuda.device_count())
-# print(torch.cuda.get_device_name(0))
+print(torch.version.cuda)
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+print(torch.cuda.get_device_name(0))
 
 # --------------------- TEST URIs ----------------------------
 
@@ -101,6 +103,7 @@ def whisperTranscribe(audioFile):
         })
 
     wordsList[-1]["end"] = getDuration("1.wav")
+    wordsList[0]["start"] = wordsList[0]["start"]*0.5
     # Prepare final transcription result for return
     transcriptionResult = {
         "transcription": tempStripped,

@@ -75,6 +75,10 @@ public class PracticePanelInputManager : MonoBehaviour
             Debug.Log(recordedBytes);
             Debug.Log(transcriptButtonData1);
             AnalysisData analysisData = await speechInputManager.SendAnalysisAudio(transcriptButtonData1, recordedBytes);
+            if (analysisData == null)
+            {
+                Debug.Log("NULL ITEM");
+            }
             SpeechCompleted(analysisData, recordedClip);
         }
     }
