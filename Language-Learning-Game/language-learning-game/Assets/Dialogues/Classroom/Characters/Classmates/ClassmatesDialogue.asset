@@ -38,7 +38,7 @@ MonoBehaviour:
     - englishChoice: 'I''m very busy '
       pinyinChoice: "W\u01D2 h\u011Bn m\xE1ng "
       chineseChoice: "\u6211\u5F88\u5FD9"
-      choiceAudio: {fileID: 8300000, guid: c525ad7171eafd743b99946320450640, type: 3}
+      choiceAudio: {fileID: 8300000, guid: 52833a61468be6946b3ac451e114ccbb, type: 3}
     - englishChoice: 'I''m not busy '
       pinyinChoice: "W\u01D2 b\xF9 m\xE1ng "
       chineseChoice: "\u6211\u4E0D\u5FD9"
@@ -73,7 +73,7 @@ MonoBehaviour:
   - englishText: What is your name?
     pinyinText: "N\u01D0 ji\xE0o sh\xE9nme m\xEDngz\xEC? "
     chineseText: "\u4F60\u53EB\u4EC0\u4E48\u540D\u5B57\uFF1F "
-    dialogueAudio: {fileID: 8300000, guid: ddb5312ebb5614e40a47e4cdc554a103, type: 3}
+    dialogueAudio: {fileID: 8300000, guid: 68912e744d1656540a91af542a3d71fe, type: 3}
     hasChoice: 1
     choices:
     - englishChoice: 'I am called [name/omit]'

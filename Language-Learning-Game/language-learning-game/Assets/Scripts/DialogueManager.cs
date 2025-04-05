@@ -36,6 +36,7 @@ public class DialogueManager : MonoBehaviour
     private int currentElementIndex;
 
     //--- CHOICE ELEMENTS + DATA ---//
+    public GameObject choiceArea;
     public GameObject choiceButtonPrefab;
     private List<GameObject> choiceButtonList = new List<GameObject>();
     private ButtonDataScript selectedChoiceData; // Data of the button pressed is stored here.
@@ -118,7 +119,7 @@ public class DialogueManager : MonoBehaviour
         choiceButtonList.Clear();// clear the list of buttons.
 
         // Clear the choice buttons from before from scene
-        foreach (Transform child in choicePanel.transform)
+        foreach (Transform child in choiceArea.transform)
         {
             Destroy(child.gameObject);
         }
@@ -127,7 +128,7 @@ public class DialogueManager : MonoBehaviour
         for (int i = 0; i < currentDialogueLine.choices.Count; i++)
         {
             DialogueElementsScript.ChoiceElement choice = currentDialogueLine.choices[i];
-            GameObject button = Instantiate(choiceButtonPrefab, choicePanel.transform);
+            GameObject button = Instantiate(choiceButtonPrefab, choiceArea.transform);
             
             ButtonDataScript buttonDataScript = button.GetComponent<ButtonDataScript>(); // Button data script is a component within each prefab button that will data related to that button.
 
@@ -235,6 +236,14 @@ public class DialogueManager : MonoBehaviour
             dialogueText.text = currentDialogueLine.englishText;
         }
 
+    }
+
+    public void DisplayThePanel()
+    {
+        dialoguePanel.SetActive(true);
+        if (choiceButtonList.Count > 0) {
+            choicePanel.SetActive(true);
+        }
     }
 
 }

@@ -91,9 +91,9 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     
     # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only tone 3.
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
-    minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)    
+    minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.25)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.22)
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
@@ -137,6 +137,55 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     }
 
     return JSONResponse(content=analysisResult)
+
+@app1.post("/getScore")
+async def getScore(timestampStartRec: float, timestampEndRec: float, timestampStartRef: float, timestampEndRef: float, recFile: UploadFile = File(...), refFile: UploadFile = File(...)):
+    referenceAudio = await refFile.read()
+    recordingAudio = await recFile.read()
+
+    with open("referenceScoring.wav", "wb") as f:    
+        f.write(referenceAudio)
+        f.close
+    with open("recordingScoring.wav","wb") as f:
+        f.write(recordingAudio)
+        f.close
+
+    audio = AudioSegment.from_file("recordingScoring.wav")
+    segment = audio[timestampStartRef*1000:timestampEndRef*1000]
+    segment.export("croppedRecordingScore.wav", format="wav")
+
+    audio = AudioSegment.from_file("referenceScoring.wav")
+    segment = audio[timestampStartRec*1000:timestampEndRec*1000]
+    segment.export("croppedReferenceScore.wav", format="wav")
+
+        # Converts the file specified by filepath to pitch values + timestamps.
+    recordingInfo, recordingPitch, recordingTimes = fileToPitch("croppedRecordingScore.wav")
+    referenceInfo, referencePitch, referenceTimes = fileToPitch("croppedReferenceScore.wav")
+   
+    # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
+    non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
+    interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
+    non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
+    interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
+    
+    # Resamples the shortest length pitch contour to match the sample size of the longer one.
+    interpolatedReferenceResampled, referenceTimesResampled, interpolatedRecordingResampled, recordingTimesResampled = resampleShortest(interpolatedReference, referenceTimes, 
+                                                                                                    interpolatedRecording, recordingTimes) 
+    
+    # Performs Min-Max normalisation to put them onto the same scale.
+    minMaxRecording = minMaxNormalise(interpolatedRecordingResampled)
+    minMaxReference = minMaxNormalise(interpolatedReferenceResampled)
+    
+    # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only tone 3.
+    minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
+    minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
+    # Gets the datapoints that differ too much past a given threshold.
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.22)
+    
+    # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
+    score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
+
+    return {"score": score }
 
 
 # ----------- HELPER FUNCTIONS -----------
@@ -300,7 +349,7 @@ def compareToneTrends(referencePitchValues, referenceTimes, recordingPitchValues
     # Fallback to avoid unhelpful feedback if accuracy is high:
     if percent > 90:
         print("TOO CORRECT, SKIP EVAL", percent)
-        feedback.append(template1.format(generateSentence(referenceTrends, " then ")))
+        feedback.append("Your speech follows a very similar contour to the reference! Well done!")
         return feedback
 
     else:
@@ -384,7 +433,7 @@ def generateFeedback(referenceTrends,recordingTrends):
     slopeTrendsRec = generateSlopeFeedback(recordingTrends)
 
     # If they're the same, but accuracy overall is low due to different points of trend appearance:  
-    feedback.append(template3.format(generateSentence(slopeTrendsRec, " followed by "), generateSentence(slopeTrendsRef, " followed by ")))
+    # feedback.append(template3.format(generateSentence(slopeTrendsRec, " followed by "), generateSentence(slopeTrendsRef, " followed by ")))
     return feedback
 
 def generateSentence(trend, connector):

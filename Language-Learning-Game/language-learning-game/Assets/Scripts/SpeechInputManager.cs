@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using UnityEditor.Overlays;
 using UnityEngine;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class SpeechInputManager : MonoBehaviour
 {
@@ -50,7 +50,9 @@ public class SpeechInputManager : MonoBehaviour
         var result = await apiManager.SendAudio(recordedAudio);
         WhisperData data = JsonConvert.DeserializeObject<WhisperData>(result);
 
-        File.WriteAllBytes(data.transcription+"Whisper.wav", recordedAudio);
+        await apiManager.SaveAudio((data.transcription + "Whisper"), recordedAudio);
+
+        //File.WriteAllBytes(data.transcription+"Whisper.wav", recordedAudio);
 
 
         return (data);
@@ -74,15 +76,7 @@ public class SpeechInputManager : MonoBehaviour
         var result = await apiManager.AnalyseAudio(transcriptButtonData.startTime, transcriptButtonData.endTime, wavData, bytes);
 
 
-        string baseFileName = transcriptButtonData.buttonTextData;
-        string filePath = baseFileName + "Analysis.wav";
-        int counter = 1;
-        while (File.Exists(filePath))
-        {
-            filePath = baseFileName + counter + "Analysis.wav";
-            counter++;
-        }
-        File.WriteAllBytes(filePath, bytes);
+        await apiManager.SaveAudio((transcriptButtonData.buttonTextData + "Parsel"), bytes);
 
         AnalysisData analysisData = JsonConvert.DeserializeObject<AnalysisData>(result);
         Debug.Log($"ParselData: {JsonConvert.SerializeObject(analysisData, Formatting.Indented)}");
@@ -105,6 +99,20 @@ public class SpeechInputManager : MonoBehaviour
         return data;
     }
 
+    async public Task<ScoreData> SendScoreEvaluation(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
+    {
+        float[] samplesRec = new float[recAudio.samples * recAudio.channels];
+        recAudio.GetData(samplesRec, 0);
+        byte[] wavDataRec = WriteToWav(samplesRec, recAudio.frequency, recAudio.channels);
+
+        float[] samplesRef = new float[refAudio.samples * refAudio.channels];
+        refAudio.GetData(samplesRef, 0);
+        byte[] wavDataRef = WriteToWav(samplesRec, refAudio.frequency, refAudio.channels);
+
+        var result = await apiManager.GetScore(startRec, endRec, startRef, endRef, wavDataRec, wavDataRef);
+        ScoreData score = JsonConvert.DeserializeObject<ScoreData>(result);
+        return score;
+    }
 
     // Converts Unity AudioClip default format into .WAV format for API
     private byte[] WriteToWav(float[] sampleArray, int speechFrequency, int recordingChannels)
@@ -159,6 +167,11 @@ public class AnalysisData
     public float accuracyScore;
     public float[] relevantDeviations;
     public string[] feedbackList;
+}
+
+public class ScoreData
+{
+    public float score;
 }
 
 //public class DifferenceData

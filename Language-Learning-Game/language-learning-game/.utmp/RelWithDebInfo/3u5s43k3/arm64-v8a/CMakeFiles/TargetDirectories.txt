@@ -1,0 +1,5 @@
+C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/.utmp/RelWithDebInfo/3u5s43k3/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/.utmp/RelWithDebInfo/3u5s43k3/arm64-v8a/CMakeFiles/rebuild_cache.dir
+C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/.utmp/RelWithDebInfo/3u5s43k3/arm64-v8a/GameActivity/CMakeFiles/game.dir
+C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/.utmp/RelWithDebInfo/3u5s43k3/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/.utmp/RelWithDebInfo/3u5s43k3/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

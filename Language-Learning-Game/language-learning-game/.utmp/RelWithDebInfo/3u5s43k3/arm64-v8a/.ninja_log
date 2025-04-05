@@ -1,0 +1,10 @@
+# ninja log v5
+104	3368	7654038742755023	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	8276c6824323984d
+15	3441	7654038742705015	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	42702eb38205aa3c
+133	3467	7654038743915749	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	90b43b35567f036a
+160	3764	7654038745435709	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	f0e96467f7f62a75
+189	3909	7654038748185797	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	a693f23a38a91564
+76	4749	7654038755955737	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	5fce2c795f0f5edd
+1	4800	7654038756565720	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	96c95a971776d771
+44	5525	7654038764201446	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	bca2ffd7fd5771f9
+5526	7123	7654038780655079	C:/Users/YL/Documents/GitHub/uni-dissertation/Language-Learning-Game/language-learning-game/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/3u5s43k3/obj/arm64-v8a/libgame.so	43639f53c16e89fa

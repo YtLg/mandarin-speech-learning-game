@@ -38,7 +38,7 @@ public class TranscriptButtonData : MonoBehaviour
         {
             textComponent.color = Color.green;
         }
-        else if(float.IsNaN(percent))
+        else if(float.IsNaN(percent) || percent <= 10)
         {
             textComponent.color = Color.red;
         }

@@ -8,7 +8,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Classroom.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Supermarket.unity
+    guid: 563619678e35c16478fff705d3b2f642
   m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 1073ad82b9ef8594695d0869fa33fb74, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: d4ee3cb687bdc444eb90ae9468be9d78, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 0cfc1901333b3ed40919a9590bedf50e, type: 2}

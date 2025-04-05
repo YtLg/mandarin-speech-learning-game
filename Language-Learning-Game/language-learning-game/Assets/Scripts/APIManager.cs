@@ -4,12 +4,19 @@ using System.Threading.Tasks;
 using Unity.Sentis;
 using System.Globalization;
 using Unity.VisualScripting;
+using UnityEngine.TextCore.Text;
+using NUnit;
 
 public class ApiManager : MonoBehaviour
 {
-    private readonly string urlWhisper = "http://127.0.0.1:8000"; // No modifying the URL outside of editor.
-    private readonly string urlParsel = "http://127.0.0.1:8001";
+    //private readonly string urlWhisper = "http://127.0.0.1:8000"; // No modifying the URL outside of editor.
+    //private readonly string urlParsel = "http://127.0.0.1:8001";
 
+    // Local Network IP
+    private readonly string urlWhisper = "http://192.168.199.215:8000"; // No modifying the URL outside of editor.
+    private readonly string urlParsel = "http://192.168.199.215:8001";
+
+ 
     // SENDS AND RECIEVES REQUESTS TO/FROM WHISPER API
     public async Task<string> SendAudio(byte[] audioData)
     {
@@ -47,6 +54,7 @@ public class ApiManager : MonoBehaviour
         var operation = request.SendWebRequest();
 
         await operation;
+
         if (request.result == UnityWebRequest.Result.Success)
         {
             string result = request.downloadHandler.text;
@@ -61,6 +69,52 @@ public class ApiManager : MonoBehaviour
         }
     }
 
+    public async Task SaveAudio(string filename, byte[] file)
+    {
+        string url = $"{urlWhisper}/saveAudio?filename={UnityWebRequest.EscapeURL(filename)}";
+        WWWForm form = new();
+        form.AddBinaryData("file", file, "audio.wav", "audio/wav");
+
+        using UnityWebRequest request = UnityWebRequest.Post(url, form);
+        var operation = request.SendWebRequest();
+        await operation;
+
+        if (request.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Error: " + request.error);
+        }
+        else
+        {
+            Debug.Log("Audio saved successfully!");
+        }
+    }
+
+    public async Task<string> GetScore(float startRec, float endRec, float startRef, float endRef, byte[] recAudio, byte[] refAudio)
+    {
+        string url = $"{urlParsel}/getScore" + $"?timestampStartRec={UnityWebRequest.EscapeURL(startRec.ToString(CultureInfo.InvariantCulture))}"
+            + $"&timestampEndRec={UnityWebRequest.EscapeURL(endRec.ToString(CultureInfo.InvariantCulture))}" 
+            + $"?timestampStartRef={UnityWebRequest.EscapeURL(startRec.ToString(CultureInfo.InvariantCulture))}"
+            + $"&timestampEndRef={UnityWebRequest.EscapeURL(endRec.ToString(CultureInfo.InvariantCulture))}";
+            WWWForm form = new();
+            form.AddBinaryData("recFile", recAudio, "recAudio.wav", "audio/wav");
+            form.AddBinaryData("refFile", refAudio, "refAudio.wav", "audio/wav");
+            using UnityWebRequest request = UnityWebRequest.Post(url, form);
+            var operation = request.SendWebRequest();
+            await operation;
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                string result = request.downloadHandler.text;
+                Debug.Log("Result: " + result);
+                return result;
+            }
+            else
+            {
+                Debug.LogError($"Error: {request.error}, Status Code: {request.responseCode}");
+                Debug.LogError($"Server Response: {request.downloadHandler.text}");
+                return null;
+            }
+    }
 
     public async Task<string> TranslateCharacter(string character)
     {
@@ -71,6 +125,7 @@ public class ApiManager : MonoBehaviour
         var operation = request.SendWebRequest();
 
         await operation;
+
         if (request.result == UnityWebRequest.Result.Success)
         {
             string result = request.downloadHandler.text;

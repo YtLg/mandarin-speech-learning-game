@@ -1,3 +1,4 @@
+import os.path
 import contextlib
 import torch
 import wave
@@ -8,11 +9,12 @@ import whisperx
 from dragonmapper import hanzi
 from deep_translator import GoogleTranslator
 
+name = "test"
 device = "cuda"
 batch_size = 16
 compute_type = "float16"
 missing = 0
-model = whisperx.load_model("turbo", device, compute_type=compute_type)
+model = whisperx.load_model("large-v2", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
@@ -35,26 +37,42 @@ async def transcribeAudio(file: UploadFile = File(...)):
     uploadedAudio = await file.read()
     print("Transcription: Request Recieved!")
 
-    # Write the byte data to a file
-    with open("1.wav", "wb") as f:    
+    # Write the byte data to a WAV File
+    with open("1.wav", "wb") as f:
         f.write(uploadedAudio)
         f.close
     print("Transcription: Request saved!")
 
-    transcription = whisperTranscribe("1.wav")
+    transcription = whisperTranscribe("1.wav") # Transcribes the WAV file
+    print(transcription)
 
     print("Transcription: Transcription complete and returning!")
-    return JSONResponse(content=transcription)
+    return JSONResponse(content=transcription) # Returns the transcription results
 
 
+# Gets the pinyin and english translations of a chinese character
 @app.post("/getTranslations")
-async def getTranslations(character: str):
+async def getTranslations(character: str): 
     print("Translating...")
-    pinyinWord = hanzi.to_pinyin(character)
-    englishWord =  GoogleTranslator(source='auto', target='en').translate(character)  # output -> Weiter so, du bist großartig
+    pinyinWord = hanzi.to_pinyin(character) 
+    englishWord =  GoogleTranslator(source='auto', target='en').translate(character)  # Automatically detects source lang and translates it to english.
     print(englishWord)
     wordTranslations  = {"pinyin":pinyinWord, "english":englishWord}
     return wordTranslations
+
+@app.post("/saveAudio")
+async def saveAudio(filename: str, file: UploadFile = File(...)):
+    
+    uploadedAudio = await file.read()
+    
+    counter = 1
+    while(os.path.isfile(name+filename+str(counter)+".wav")):
+        counter +=1 
+
+    with open(name + filename+str(counter)+".wav", "wb") as f:
+        f.write(uploadedAudio)
+        f.close
+    return {"message": "Saved!"}
 
 # ------------- AUDIO PROCESSING FUNCTIONS --------------------
 

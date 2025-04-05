@@ -1,7 +1,9 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,6 +18,7 @@ public class OutputPanelManager : MonoBehaviour
     public DialogueManager dialoguePanelManager;
     public PracticePanelInputManager practicePanelInputManager;
     public ObjectPanelManager objectPanelManager;
+    public SpeechInputManager speechInputManager;
 
 
     //----- DATA ------ //
@@ -76,7 +79,7 @@ public class OutputPanelManager : MonoBehaviour
     }
 
     // sets up the button display of the expected speech text transcript
-    void SetupExpectedTextButtons()
+    async void SetupExpectedTextButtons()
     {
         transcriptButtonList.Clear();
 
@@ -95,7 +98,7 @@ public class OutputPanelManager : MonoBehaviour
                 idealWord.probability += 0.01f;
 
 
-                
+                // Creates a button from the prefab
                 GameObject button = Instantiate(transcriptButtonPrefab, transcriptionArea.transform);
                 transcriptButtonList.Add(button);
                 TranscriptButtonData transcriptButtonData = button.GetComponent<TranscriptButtonData>(); // Button data script is a component within each prefab button that will data related to that button.
@@ -103,60 +106,75 @@ public class OutputPanelManager : MonoBehaviour
                 
                 transcriptButtonData.textAudio = choiceAudio;
                 transcriptButtonData.buttonTextData = idealWord.word;
-                transcriptButtonData.expectedProb = (float)(idealWord.probability + 0.001);
+                transcriptButtonData.expectedProb = (float)100;//(idealWord.probability + 0.001);
                 transcriptButtonData.startTime = idealWord.start;
                 transcriptButtonData.endTime = idealWord.end;
                 transcriptButtonData.actualProb = 0.0f; // default for user input doesn't match.
 
+            for (int j = 0; j < recWordCount; j++)
+            {
+                WordData current = recordingData.words[j];
+                if (idealWord == current)
+                {
+                    ScoreData score = await sendScoreData(current.start, current.end, idealWord.start, idealWord.end, recSpeech, choiceAudio);
+                    if(score == null)
+                    {
+                        transcriptButtonData.actualProb = 50.0f;
+                        break;
+                    }
+                    transcriptButtonData.actualProb = score.score;
+                    break;
+                }
+            }
 
                 // LOGIC TO DETERMINE ACTUAL PROBABILITY // 
                 // Each word segment will check its neighboring words for the presence of its words in that word segment.
                 // If it is present then it will add it into a running total, and average it based on how many words were present to get the total.
 
-                int count = 0;              // reset count + sum every new ideal word.
-                float cumulativeSum = 0;
-                int max = 0;
-                if (i == 0) // 0 CASE
-                {
-                    if (recWordCount >= i + 2)
-                    {
-                        count += 1;
-                        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + 1]);
-                        cumulativeSum += probability;
-                        count += tempCount;
-                    }
-                    count += 1;
-                    (probability, tempCount) = CheckString(idealWord, recordingData.words[i]);
-                    cumulativeSum += probability;
-                    count += tempCount;
-                    transcriptButtonData.actualProb += cumulativeSum / count;
-                }
+                //int count = 0;              // reset count + sum every new ideal word.
+                //float cumulativeSum = 0;
+                //int max = 0;
+                //if (i == 0) // 0 CASE
+                //{
+                //    if (recWordCount >= i + 2)
+                //    {
+                //        count += 1;
+                //        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + 1]);
+                //        cumulativeSum += probability;
+                //        count += tempCount;
+                //    }
+                //    count += 1;
+                //    (probability, tempCount) = CheckString(idealWord, recordingData.words[i]);
+                //    cumulativeSum += probability;
+                //    count += tempCount;
+                //    transcriptButtonData.actualProb += cumulativeSum / count;
+                //}
 
-                else if (recWordCount > 1) // i !=0 CASE
-                {
-                    if (recWordCount > i + 1)
-                    {
-                        max = 1; // before + current + next item
-                    }
-                    else if (recWordCount == idealWordCount)
-                    {
-                        max = 0; // before + current item
-                    }
-                    else if (recWordCount == idealWordCount - 1)
-                    {
-                        max = -1; // before item
-                    }
+                //else if (recWordCount > 1) // i !=0 CASE
+                //{
+                //    if (recWordCount > i + 1)
+                //    {
+                //        max = 1; // before + current + next item
+                //    }
+                //    else if (recWordCount == idealWordCount)
+                //    {
+                //        max = 0; // before + current item
+                //    }
+                //    else if (recWordCount == idealWordCount - 1)
+                //    {
+                //        max = -1; // before item
+                //    }
 
-                    for (int j = -1; j <= max; j++) //if recording data size is larger than current i.
-                    {
-                        count += 1;
-                        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + j]);
-                        cumulativeSum += probability;
-                        count += tempCount;
-                    }
+                //    for (int j = -1; j <= max; j++) //if recording data size is larger than current i.
+                //    {
+                //        count += 1;
+                //        (probability, tempCount) = CheckString(idealWord, recordingData.words[i + j]);
+                //        cumulativeSum += probability;
+                //        count += tempCount;
+                //    }
 
-                    transcriptButtonData.actualProb += (float)((cumulativeSum / count) + 0.001);
-                }
+                //    transcriptButtonData.actualProb += (float)((cumulativeSum / count) + 0.001);
+                //}
 
             transcriptButtonData.SetText();
         }
@@ -246,12 +264,18 @@ public class OutputPanelManager : MonoBehaviour
     {
     string idealText = CleanMandarinText(ideal.word);
     string recordedText = CleanMandarinText(recording.word);
-        if (idealText.Contains(recordedText) || idealText.Contains(recordedText))
+        if (idealText.Contains(recordedText) || recordedText.Contains(idealText))
         {
             recording.probability += (float)0.001;
             return (recording.probability/ideal.probability, 0);
         }
         return (0, -1);
+    }
+
+    async Task<ScoreData> sendScoreData(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
+    {
+        ScoreData scoreData = await speechInputManager.SendScoreEvaluation(startRec, endRec, startRef, endRef, recAudio, refAudio);
+        return scoreData;
     }
 
 }

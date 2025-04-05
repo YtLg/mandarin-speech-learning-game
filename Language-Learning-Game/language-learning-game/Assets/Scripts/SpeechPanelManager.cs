@@ -22,15 +22,17 @@ public class SpeechPanelManager : MonoBehaviour
     public Button translateButton;
     public Button replayButton;
     public  Button recordButton;
+    public Button backButton;
 
 
     // ------ UI ELEMENTS Display -------
     public TextMeshProUGUI displayText;
-
+    private TextMeshProUGUI recordButtonText;
 
     // ------ REFERENCE TO OTHER COMPONENTS -----
     public SpeechInputManager speechInputManager;
     public OutputPanelManager outputPanelManager;
+    public DialogueManager dialogueManager;
 
     int currentLanguageID;
 
@@ -46,6 +48,8 @@ public class SpeechPanelManager : MonoBehaviour
         translateButton.onClick.AddListener(TranslateButtonPressed);
         replayButton.onClick.AddListener(ReplayButtonPressed);
         recordButton.onClick.AddListener(RecordButtonPressed);
+        backButton.onClick.AddListener(BackButtonPressed);
+        recordButtonText = recordButton.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public void DisplaySpeechPanel(ButtonDataScript buttonData, int type)
@@ -71,6 +75,8 @@ public class SpeechPanelManager : MonoBehaviour
 
     public void SpeechCompleted(WhisperData transcriptData, AudioClip recordedSpeech, WhisperData referenceData)
     {
+        Debug.Log("Speech Completed!");
+        recordButtonText.text = "Press to Start Recording";
         outputPanelManager.SetupDisplayOutputPanel(transcriptData, recordedSpeech, referenceData, selectedChoiceData.choiceAudio, objectOrNPC);
         dialoguePanel.SetActive(false);
     }
@@ -83,14 +89,21 @@ public class SpeechPanelManager : MonoBehaviour
         if (!speechInputManager.isRecording) // False vs ! for readability.
         {
             speechInputManager.StartRecording();
+            recordButtonText.text = "Press to Stop Recording";
             
         }
         else
         {
+            recordButtonText.text = "Processing your input...";
             (byte[] recordedBytes, AudioClip recordedClip) = speechInputManager.StopRecording();
             Debug.Log("Stopped recording and data saved!");
             WhisperData transcriptData = await speechInputManager.SendRecordedAudio(recordedBytes);
             Debug.Log("Transcript data for recording done!");
+            if (transcriptData != null)
+            {
+                Debug.Log("NULL ITEM");
+                recordButtonText.text = "Press to Start Recording";
+            }
             WhisperData referenceData = await speechInputManager.SendReferenceAudio(selectedChoiceData.choiceAudio);
             Debug.Log("Transcript data for reference done!");
             SpeechCompleted(transcriptData, recordedClip, referenceData);
@@ -116,6 +129,11 @@ public class SpeechPanelManager : MonoBehaviour
         audioManager.PlayDialogue(selectedChoiceData.choiceAudio);
     }
 
+    private void BackButtonPressed()
+    {
+        dialoguePanel.SetActive(false);
+        dialogueManager.DisplayThePanel();
+    }
 
     // -- HELPER FUNCTIONS ---
 
