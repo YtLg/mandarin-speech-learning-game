@@ -8,13 +8,14 @@ import uvicorn
 import whisperx
 from dragonmapper import hanzi
 from deep_translator import GoogleTranslator
+import chinese_converter
 
 name = "test"
 device = "cuda"
 batch_size = 16
 compute_type = "float16"
 missing = 0
-model = whisperx.load_model("large-v2", device, compute_type=compute_type)
+model = whisperx.load_model("large-v3", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 
@@ -83,25 +84,32 @@ def whisperTranscribe(audioFile):
     result = model.transcribe(audio, batch_size=batch_size, language="zh", task="transcribe")
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     resultAligned = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=True)
-    
-    wordsList = []
-    print(len(resultAligned["segments"][0]["words"]))
-    for i in range(len(resultAligned["segments"][0]["words"])):
-        item = resultAligned["segments"][0]["words"][i] # get current item
-        
+    print("----------------------------0")
+    # Removes all punctuation items from the list of transcriptions.
+    noPunctWordList = []    
+    for item in resultAligned["segments"][0]["words"]:
         # Skip item if it's punctuation transcription
         item["word"] = ''.join(e for e in item["word"] if e.isalnum()) # Remove all punctuation
         if item["word"] == '':
             continue
-        
+        noPunctWordList.append(item)
+
+    InterpolatedWordsList = []
+    for i in range(len(noPunctWordList)):
+        item = noPunctWordList[i] # get current item
+        print("current item is...", item)
         # If transcription is missing any data.
+        print("--------------------1")
         if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
             missing += 1
-            item = missingDataCorrection(item, i, resultAligned["segments"][0]["words"])
-        
+            item = missingDataCorrection(item, i, noPunctWordList)
+            if "start" not in item or "end" not in item or "score" not in item: # if there's still missing data, skip it.
+                continue
+            # item = missingDataCorrection(item, i, resultAligned["segments"][0]["words"])
+        print("-------------------2")
         # Append the current item's data to the return list of words.
-        wordsList.append({
-            "word":item["word"],
+        InterpolatedWordsList.append({
+            "word":chinese_converter.to_simplified(item["word"]),
             "start":item["start"],
             "end":item["end"],
             "probability":item["score"]
@@ -113,19 +121,19 @@ def whisperTranscribe(audioFile):
 
     # Add whole word in there if word segment is missing
     if missing > 0:
-        wordsList.append({
-            "word":tempStripped,
-            "start":0.0,
-            "end":getDuration("1.wav"),
-            "probability":wordsList[-1]["probability"]
-        })
-
-    wordsList[-1]["end"] = getDuration("1.wav")
-    wordsList[0]["start"] = wordsList[0]["start"]*0.5
+        if len(InterpolatedWordsList) <= 2: # Ensure only 1 word values get this.
+            InterpolatedWordsList.append({
+                "word":tempStripped,
+                "start":0.0,
+                "end":getDuration("1.wav"),
+                "probability":InterpolatedWordsList[-1]["probability"]
+            })
+    InterpolatedWordsList[-1]["end"] = getDuration("1.wav")
+    InterpolatedWordsList[0]["start"] = InterpolatedWordsList[0]["start"]*0.5
     # Prepare final transcription result for return
     transcriptionResult = {
         "transcription": tempStripped,
-        "words": wordsList
+        "words": InterpolatedWordsList
     }
     return transcriptionResult
 
@@ -140,13 +148,19 @@ def getDuration(file): # Gets the duration of the audio file path provided.
 
 # Fills in the missing transcription using neighboring data.
 def missingDataCorrection(item, index, listOfWords):
+    print("missing item ^^!!")
     if index == 0: # First item
         if len(listOfWords) == 1: # If first item is last item.
+            item["start"] = 0.0
+            item["end"] = getDuration("1.wav")
             return item 
-        item["start"] = 0.0
-        item["end"] = listOfWords[index+1]["start"] * 0.9 # -10% from start of next word
-        item["score"] = listOfWords[index+1]["score"]
-        return item
+        elif "start" in listOfWords[index + 1] and listOfWords[index + 1]["start"] is not None:
+            item["start"] = 0.0
+            item["end"] = listOfWords[index+1]["start"] * 0.9 # -10% from start of next word
+            item["score"] = listOfWords[index+1]["score"]
+            return item
+        else:
+            return item
     if index == len(listOfWords)-1: # Last item
         item["start"] = listOfWords[index-1]["end"] * 1.1 # end of previous item
         item["end"] = getDuration("1.wav") # final timestamp

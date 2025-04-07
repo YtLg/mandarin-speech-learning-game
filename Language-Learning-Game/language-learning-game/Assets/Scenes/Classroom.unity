@@ -24835,7 +24835,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1449430296
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25039,7 +25039,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 1450, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1454218906
 MonoBehaviour:
@@ -25048,7 +25048,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1454218904}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
@@ -25058,7 +25058,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
@@ -30688,7 +30688,7 @@ MonoBehaviour:
   practicePanelInputManager: {fileID: 1809787874}
   practicePanelOutputManager: {fileID: 833534899}
   npcDialogueElements: {fileID: 11400000, guid: 38a0a81b7bfab0a49abc5f93d55b323a, type: 2}
-  offset: {x: 0, y: 1.7, z: 0}
+  offset: {x: 0, y: 2, z: -1}
   offset4Mag: {x: 1, y: 0.5, z: 0}
 --- !u!136 &1734525097
 CapsuleCollider:
@@ -34117,6 +34117,7 @@ MonoBehaviour:
   dialoguePanelManager: {fileID: 449149180}
   practicePanelInputManager: {fileID: 1809787874}
   objectPanelManager: {fileID: 1740463156}
+  speechInputManager: {fileID: 1660284471}
   outputPanel: {fileID: 744078376}
   textButtonArea: {fileID: 1123700397}
   transcriptText: {fileID: 1954872682}

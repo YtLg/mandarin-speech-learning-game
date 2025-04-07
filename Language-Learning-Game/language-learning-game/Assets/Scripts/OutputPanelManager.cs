@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -44,8 +45,8 @@ public class OutputPanelManager : MonoBehaviour
     private List<GameObject> transcriptButtonList = new(); // in case we add translation functionality.
 
     //--- CALCULATION TEMP VARIABLES ---//
-    float probability = 0.0f;
-    int tempCount = 0;
+    //float probability = 0.0f;
+    //int tempCount = 0;
     int objectOrNPC;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -61,6 +62,11 @@ public class OutputPanelManager : MonoBehaviour
 
     }
 
+    private void Update()
+    {
+        ContinueConditionalSetup(); // Issue with continue noot showing up due to api lag.
+    }
+
     //--- UI ELEMENT SETUP & LOGIC ---//
 
     // Sets up the UI elements of the result panel
@@ -74,7 +80,6 @@ public class OutputPanelManager : MonoBehaviour
         idealData = referenceData;
         transcriptText.text = ("You Said : \"" + data.transcription + "\"");
         SetupExpectedTextButtons();
-        ContinueConditionalSetup();
         outputPanel.SetActive(true);
     }
 
@@ -114,9 +119,13 @@ public class OutputPanelManager : MonoBehaviour
             for (int j = 0; j < recWordCount; j++)
             {
                 WordData current = recordingData.words[j];
-                if (idealWord == current)
+                Debug.Log("Current Ref word is:" + idealWord.word + "current Rec is:" + current.word);
+                if (idealWord.word == current.word)
                 {
-                    ScoreData score = await sendScoreData(current.start, current.end, idealWord.start, idealWord.end, recSpeech, choiceAudio);
+                    Debug.Log("SAME!");
+                    Debug.Log("Current data:" + current.start + " " + current.end);
+                    Debug.Log("Ideal Data:" + idealWord.start + " " + idealWord.end);
+                    ScoreData score = await SendScoreData(current.start, current.end, idealWord.start, idealWord.end, recSpeech, choiceAudio);
                     if(score == null)
                     {
                         transcriptButtonData.actualProb = 50.0f;
@@ -198,7 +207,7 @@ public class OutputPanelManager : MonoBehaviour
         }
 
         float totalPercent = actualProbTotal / expectedProbTotal * 100;
-        if (totalPercent < 60)
+        if (totalPercent < 40)
         {
             continueButton.gameObject.SetActive(false);
             return;
@@ -272,8 +281,17 @@ public class OutputPanelManager : MonoBehaviour
         return (0, -1);
     }
 
-    async Task<ScoreData> sendScoreData(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
+    async Task<ScoreData> SendScoreData(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
     {
+        if (recAudio == null)
+        {
+            Debug.LogWarning("recAudio is null, skipping score data send.");
+        }
+        if (refAudio == null)
+        {
+            Debug.LogWarning("refAudio is null, skipping score data send.");
+
+        }
         ScoreData scoreData = await speechInputManager.SendScoreEvaluation(startRec, endRec, startRef, endRef, recAudio, refAudio);
         return scoreData;
     }

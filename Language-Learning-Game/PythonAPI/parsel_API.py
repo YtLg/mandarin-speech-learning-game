@@ -93,7 +93,7 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.22)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.23)
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
@@ -150,6 +150,7 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
         f.write(recordingAudio)
         f.close
 
+    print("getting score")
     audio = AudioSegment.from_file("recordingScoring.wav")
     segment = audio[timestampStartRef*1000:timestampEndRef*1000]
     segment.export("croppedRecordingScore.wav", format="wav")
@@ -164,8 +165,14 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
    
     # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
     non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
+    if non0Recording == None: # Fallback for invalid timestamp provided by whisper.
+        return 50
     interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
+
+
     non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
+    if non0Reference == None:
+        return 50
     interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
     
     # Resamples the shortest length pitch contour to match the sample size of the longer one.
@@ -180,11 +187,14 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.22)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.32) # Higher threshold accounting for offsets in timestamping.
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
+    if score == None:
+        score = 50
 
+    print(score)
     return {"score": score }
 
 
@@ -200,8 +210,11 @@ def fileToPitch(filepath):
 
 # This removes silence at the beginning and after the end of the recording.
 def maskAndNull(pitchValues, times):
-    firstNoiseIndex = np.nonzero(pitchValues)[0][0]
-    lastNoiseIndex = np.nonzero(pitchValues)[0][-1]
+    nonZeroPitchValues = np.nonzero(pitchValues)[0]
+    if len(nonZeroPitchValues) == 0:
+        return None, None
+    firstNoiseIndex = nonZeroPitchValues[0]
+    lastNoiseIndex = nonZeroPitchValues[0]
     
     filteredPitchValues = pitchValues[firstNoiseIndex:lastNoiseIndex+1]
     filteredTimeValues = times[firstNoiseIndex:lastNoiseIndex+1]

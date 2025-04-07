@@ -36,7 +36,7 @@ public class PracticePanelInputManager : MonoBehaviour
         recordButton.onClick.AddListener(RecordButtonPressed);
         translateButton.onClick.AddListener(TranslateButtonPressed);
         backButton.onClick.AddListener(BackButtonPressed);
-        recordButtonText = recordButton.GetComponent<TextMeshProUGUI>();
+        recordButtonText = recordButton.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     public void SetupPanel(TranscriptButtonData transcriptButtonData)
@@ -70,7 +70,6 @@ public class PracticePanelInputManager : MonoBehaviour
             Debug.Log("Recording Started!");
             speechInputManager.StartRecording();
             recordButtonText.text = "Press to Start Recording";
-
 
         }
         else
