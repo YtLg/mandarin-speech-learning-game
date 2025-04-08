@@ -84,7 +84,6 @@ def whisperTranscribe(audioFile):
     result = model.transcribe(audio, batch_size=batch_size, language="zh", task="transcribe")
     model_a, metadata = whisperx.load_align_model(language_code=result["language"], device=device)
     resultAligned = whisperx.align(result["segments"], model_a, metadata, audio, device, return_char_alignments=True)
-    print("----------------------------0")
     # Removes all punctuation items from the list of transcriptions.
     noPunctWordList = []    
     for item in resultAligned["segments"][0]["words"]:
@@ -97,16 +96,15 @@ def whisperTranscribe(audioFile):
     InterpolatedWordsList = []
     for i in range(len(noPunctWordList)):
         item = noPunctWordList[i] # get current item
-        print("current item is...", item)
         # If transcription is missing any data.
-        print("--------------------1")
+
         if "start" not in item or "end" not in item or "score" not in item: #Skip punctuations which have no start/end/score.
             missing += 1
             item = missingDataCorrection(item, i, noPunctWordList)
             if "start" not in item or "end" not in item or "score" not in item: # if there's still missing data, skip it.
                 continue
             # item = missingDataCorrection(item, i, resultAligned["segments"][0]["words"])
-        print("-------------------2")
+
         # Append the current item's data to the return list of words.
         InterpolatedWordsList.append({
             "word":chinese_converter.to_simplified(item["word"]),
@@ -116,8 +114,9 @@ def whisperTranscribe(audioFile):
         })
 
     # remove all punctuation, special charactes & spaces from transcription.
-    temp = resultAligned["segments"][0]["text"]
-    tempStripped = ''.join(e for e in temp if e.isalnum())
+    tempScript = resultAligned["segments"][0]["text"]
+    tempStripped = ''.join(e for e in tempScript if e.isalnum())
+    tempTranslated = chinese_converter.to_simplified(tempStripped)
 
     # Add whole word in there if word segment is missing
     if missing > 0:
@@ -132,7 +131,7 @@ def whisperTranscribe(audioFile):
     InterpolatedWordsList[0]["start"] = InterpolatedWordsList[0]["start"]*0.5
     # Prepare final transcription result for return
     transcriptionResult = {
-        "transcription": tempStripped,
+        "transcription": tempTranslated,
         "words": InterpolatedWordsList
     }
     return transcriptionResult

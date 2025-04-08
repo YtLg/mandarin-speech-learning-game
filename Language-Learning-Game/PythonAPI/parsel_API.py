@@ -165,15 +165,12 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
    
     # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
     non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
-    if non0Recording == None: # Fallback for invalid timestamp provided by whisper.
-        print("1")
+    if len(non0Recording) == 0: # Fallback for invalid timestamp provided by whisper.
         return {"score": 50 }
     interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
 
-
     non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
-    if non0Reference == None:
-        print("2")
+    if len(non0Reference) == 0:
         return {"score": 50 }
     interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
     
@@ -189,14 +186,14 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.29) # Higher threshold accounting for offsets in timestamping.
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.27) # Higher threshold accounting for offsets in timestamping.
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
     if score == None:
         score = 50
 
-    print(score)
+    print("Score is", score)
     return {"score": score }
 
 
@@ -204,7 +201,7 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
 
 def fileToPitch(filepath):
     sound = parselmouth.Sound(filepath) 
-    pitch = sound.to_pitch()
+    pitch = sound.to_pitch(minimum_pitch=150, maximum_pitch=600) # See bug: "To analyse this Sound, “minimum pitch” must not be less than 150 Hz."
     times = pitch.xs()
     pitchValues = pitch.selected_array['frequency']
 
@@ -214,7 +211,7 @@ def fileToPitch(filepath):
 def maskAndNull(pitchValues, times):
     nonZeroPitchValues = np.nonzero(pitchValues)[0]
     if len(nonZeroPitchValues) == 0:
-        return None, None
+        return [], []
     firstNoiseIndex = nonZeroPitchValues[0]
     lastNoiseIndex = nonZeroPitchValues[-1]
     
@@ -227,9 +224,9 @@ def maskAndNull(pitchValues, times):
 
 def interpolateValues(pitchValues, times):
     # Assume leading + trailing NaN values are removed via maskNull & start at beginning + end of pitchValues
-
     nanIndices = np.isnan(pitchValues) # returns an array that tells if "n" is NaN or not, so can interpolate only on NaN values.
-
+    if len(nanIndices) == 0:
+        return pitchValues, times
     # puts times[nan](x) onto times[~nan](x) axis and uses the corresponding neighboring pitchValues of those times to figure out its missing pitchValue
     interpolatedPitch = np.interp(times[nanIndices],times[~nanIndices], pitchValues[~nanIndices]) 
     pitchValues[nanIndices] = interpolatedPitch
@@ -259,12 +256,7 @@ def minMaxNormalise(pitchA):
     return normalisedA
 
 def flattenValues(normalisedValues, originalvalues, flattenThreshold):
-    print("hello!")
-    print(originalvalues)
-    print("max", max(originalvalues))
-    print("min", min(originalvalues))
     if max(originalvalues) - min(originalvalues) <= flattenThreshold:
-        print("Flattening!")
         for i in range(len(normalisedValues)):
             normalisedValues[i] = ((normalisedValues[i] - 0.5) * 0.1) + 0.5
     return normalisedValues
@@ -296,7 +288,6 @@ def getCorrectness(majorDeviations,recordingValues):
 
 def groupByConsequtive(diffIndexes):
     diffIndexes = [int(x) for x in diffIndexes] # Fix formatting issue
-    print("Diff indexes are:", diffIndexes)
     groupedArr = [[diffIndexes[0]]]
     for x in diffIndexes[1:]:
         if x == groupedArr[-1][-1] + 1:
@@ -404,8 +395,6 @@ def removeDuplicateConsequtive(trends): # Removes consequtive equivalent items
 
 def detectTrend(indexArray, dataArray, originalData, order=1):
     # dataArray = flattenValues(dataArray, originalData, 30)
-    print("index = ", indexArray)
-    print(dataArray)
     result = np.polyfit(indexArray, list(dataArray), order)
     slope = result[-2]
     return float(slope)
@@ -433,7 +422,6 @@ def generateFeedback(referenceTrends,recordingTrends):
     if len(referenceTrends) == len(recordingTrends): # Only if trends are equal in length are they equivalent
         for i in range(len(referenceTrends)): 
             if referenceTrends[i] != recordingTrends[i]: # Checks each individual element, so order matters vs comparison on whole array
-                print("non same detected")
                 sameTrends = False
     else:
         sameTrends = False
