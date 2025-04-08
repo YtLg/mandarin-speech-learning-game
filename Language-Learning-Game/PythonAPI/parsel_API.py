@@ -166,13 +166,15 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     # Removes leading + trailing '0' pitch values + interpolates remaining gaps.
     non0Recording, recordingTimes = maskAndNull(recordingPitch, recordingTimes)
     if non0Recording == None: # Fallback for invalid timestamp provided by whisper.
-        return 50
+        print("1")
+        return {"score": 50 }
     interpolatedRecording, recordingTimes = interpolateValues(non0Recording, recordingTimes)
 
 
     non0Reference, referenceTimes = maskAndNull(referencePitch, referenceTimes)
     if non0Reference == None:
-        return 50
+        print("2")
+        return {"score": 50 }
     interpolatedReference, referenceTimes = interpolateValues(non0Reference, referenceTimes)
     
     # Resamples the shortest length pitch contour to match the sample size of the longer one.
@@ -187,7 +189,7 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.32) # Higher threshold accounting for offsets in timestamping.
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.29) # Higher threshold accounting for offsets in timestamping.
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
@@ -214,7 +216,7 @@ def maskAndNull(pitchValues, times):
     if len(nonZeroPitchValues) == 0:
         return None, None
     firstNoiseIndex = nonZeroPitchValues[0]
-    lastNoiseIndex = nonZeroPitchValues[0]
+    lastNoiseIndex = nonZeroPitchValues[-1]
     
     filteredPitchValues = pitchValues[firstNoiseIndex:lastNoiseIndex+1]
     filteredTimeValues = times[firstNoiseIndex:lastNoiseIndex+1]
@@ -402,6 +404,8 @@ def removeDuplicateConsequtive(trends): # Removes consequtive equivalent items
 
 def detectTrend(indexArray, dataArray, originalData, order=1):
     # dataArray = flattenValues(dataArray, originalData, 30)
+    print("index = ", indexArray)
+    print(dataArray)
     result = np.polyfit(indexArray, list(dataArray), order)
     slope = result[-2]
     return float(slope)
