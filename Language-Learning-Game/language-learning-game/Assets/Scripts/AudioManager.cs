@@ -12,9 +12,15 @@ public class AudioManager : MonoBehaviour
 
 
     // Playing, pausing and swapping out the background audio
+    private void Start()
+    {
+        ChangeMusic(backgroundMusic);
+        PlayMusic();
+    }
 
     void PlayMusic()
     {
+        musicSource.volume = 0.02f;
         musicSource.Play();
     }
 

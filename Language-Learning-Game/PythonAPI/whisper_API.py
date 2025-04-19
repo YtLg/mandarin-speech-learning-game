@@ -15,7 +15,7 @@ device = "cuda"
 batch_size = 16
 compute_type = "float16"
 missing = 0
-model = whisperx.load_model("large-v3", device, compute_type=compute_type)
+model = whisperx.load_model("turbo", device, compute_type=compute_type)
 # model = whisperx.load_model("large-v2").to("cuda") # Run on GPU -> needs numpy 2.0
 app = FastAPI()
 

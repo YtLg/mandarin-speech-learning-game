@@ -1,7 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI
-from pydantic import BaseModel
 import uvicorn
 import noisereduce as nr
 from scipy.io import wavfile
@@ -10,6 +9,7 @@ import parselmouth
 import numpy as np
 from scipy.ndimage.interpolation import zoom
 import copy
+from matplotlib import pyplot as plt
 
 tone = 1
 
@@ -25,15 +25,11 @@ app1 = FastAPI()
 
 sizeThreshold = 0.045 # 4.5% / # threshold of difference for collapsing difference array
 
-class TimestampArray(BaseModel):
-    timestamps: list = []
-
-
 
 # ----------------------- TEST URI ------------------------------------------
 @app1.post("/")
-async def hello(timestamp: TimestampArray):
-    print(timestamp.timestamps[0], timestamp.timestamps[1])
+async def hello(timestamp: float):
+    print(timestamp)
     return {"message": "helloooo"}
 
 
@@ -56,15 +52,12 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     segment = audio[timestampStart*1000:timestampEnd*1000]
     segment.export("croppedReference.wav", format="wav")
 
-    # load data
+
     rate, data = wavfile.read("recording.wav")
+
     # perform noise reduction
     reduced_noise = nr.reduce_noise(y=data, sr=rate)
     wavfile.write("recordingReduced.wav", rate, reduced_noise)
-
-    # 2: Check for Excessive noise + Silence
-        # Cut out silence <- DONE IN PARSELMOUTH LATER //
-        # if noise exceeds a certain amount, return with a null value for failure. <-!!! TODO !!!
 
     # 3: Processing Audio + Pitch Data
 
@@ -89,11 +82,11 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     minMaxReference = minMaxNormalise(interpolatedReferenceResampled)
 
     
-    # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only tone 3.
+    # Applies a flattening function onto pitch values given some threshold. Fixes amplified differences for only ton    e 3.
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.23)
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.25)
     
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
@@ -103,28 +96,41 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
 
     # Generates feedback from the processed data.
     feedback = []
-    if tone == 0:
-        feedback = compareNeutral(minMaxReferenceFlatten, referenceTimes, minMaxRecordingFlatten, recordingTimes)
-        print(feedback)
-    else:
-        feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimes, minMaxRecordingFlattenCopy, recordingTimes, score)
-        print(feedback)
+
+    # if tone == 0:     
+    #     feedback = compareNeutral(minMaxReferenceFlatten, referenceTimes, minMaxRecordingFlatten, recordingTimes)
+    #     print(feedback)
+    # else:
+    #     feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimes, minMaxRecordingFlattenCopy, recordingTimes, score)
+    #     print(feedback)
 
     # Only do this if score is under 65?
     relevantDeviations = []
-    if score < 70:
+    if score < 69:
         diffFeedback, relevantDeviations = generateDifferenceFeedback(minMaxReferenceFlattenCopy, minMaxRecordingFlattenCopy, relevantDifferences)
         if len(diffFeedback) > 0:
             feedback.append("Highlighted in red you will see points of major deviations in your tone!")
             for i in diffFeedback:
                 feedback.append(i)
 
+        if len(feedback) == 0: # fallback to segmented feedback if it doesn't provide any feedback from deviation based.
+            feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimes, minMaxRecordingFlattenCopy, recordingTimes, score)
+    else:
+        feedback.append("Well done! Your tone is very close to the reference!")
     # Collapse relevant deviations back into 1d array.
     relevantDeviationsCollapsed = []
     for i in relevantDeviations:
         relevantDeviationsCollapsed += i
 
-    print(relevantDeviationsCollapsed)
+
+    all_pitch3 = np.concatenate([minMaxRecordingFlatten, minMaxReferenceFlatten])
+    ymin = np.nanmin(all_pitch3) * 0.9
+    ymax = np.nanmax(all_pitch3) * 1.1
+    draw_pitch(minMaxRecordingFlatten, recordingTimesResampled, ymin, ymax)
+    draw_pitch2(minMaxReferenceFlatten, referenceTimesResampled, ymin, ymax)
+    plt.savefig("plot.png")
+    plt.show()
+
     # Need to return: pitches / times / major differences
     analysisResult = {
         "pitchRecording": minMaxRecordingFlatten.tolist(),
@@ -143,6 +149,12 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     referenceAudio = await refFile.read()
     recordingAudio = await recFile.read()
 
+    print(timestampStartRec)
+    print(timestampEndRec)
+
+    print(timestampStartRef)
+    print(timestampEndRef)
+
     with open("referenceScoring.wav", "wb") as f:    
         f.write(referenceAudio)
         f.close
@@ -152,11 +164,11 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
 
     print("getting score")
     audio = AudioSegment.from_file("recordingScoring.wav")
-    segment = audio[timestampStartRef*1000:timestampEndRef*1000]
+    segment = audio[timestampStartRec*1000:timestampEndRec*1000]
     segment.export("croppedRecordingScore.wav", format="wav")
 
     audio = AudioSegment.from_file("referenceScoring.wav")
-    segment = audio[timestampStartRec*1000:timestampEndRec*1000]
+    segment = audio[timestampStartRef*1000:timestampEndRef*1000]
     segment.export("croppedReferenceScore.wav", format="wav")
 
         # Converts the file specified by filepath to pitch values + timestamps.
@@ -197,11 +209,29 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     return {"score": score }
 
 
+# --------- Graphing functions for compiling audio data ----------
+def draw_pitch(pitchValues, times, ymin, ymax):
+    times -= times[0]
+    plt.plot(times, pitchValues, '-', markersize=5, color='w')
+    plt.plot(times, pitchValues, '-', markersize=5, label='recording')
+    plt.grid(False)
+    plt.ylim(ymin, ymax)  # Use pre-computed limits
+    plt.ylabel("Pitch Value")
+    plt.xlabel("Time")
+
+def draw_pitch2(pitchValues, times, ymin, ymax):
+    times -= times[0]
+    plt.plot(times, pitchValues, '-', markersize=5, color='w')
+    plt.plot(times, pitchValues, '-', markersize=2, color='black', label='reference')
+    plt.ylim(ymin, ymax)  # Same limits as draw_pitch
+    plt.legend()
+
+
 # ----------- HELPER FUNCTIONS -----------
 
 def fileToPitch(filepath):
     sound = parselmouth.Sound(filepath) 
-    pitch = sound.to_pitch(minimum_pitch=150, maximum_pitch=600) # See bug: "To analyse this Sound, “minimum pitch” must not be less than 150 Hz."
+    pitch = sound.to_pitch() # See bug: "To analyse this Sound, “minimum pitch” must not be less than 150 Hz."
     times = pitch.xs()
     pitchValues = pitch.selected_array['frequency']
 
@@ -313,6 +343,7 @@ def groupNeighbours(indexArray, n=2):
 
 
 # ---------- FEEDBACK GENERATOR -------------
+
 
 # -------------- TONE COMPARISON FUNCTIONS ------------------ 
 def compareLength(referenceTimes, recordingTimes):

@@ -106,9 +106,14 @@ public class SpeechInputManager : MonoBehaviour
 
         float[] samplesRef = new float[refAudio.samples * refAudio.channels];
         refAudio.GetData(samplesRef, 0);
-        byte[] wavDataRef = WriteToWav(samplesRec, refAudio.frequency, refAudio.channels);
+        byte[] wavDataRef = WriteToWav(samplesRef, refAudio.frequency, refAudio.channels);
 
         var result = await apiManager.GetScore(startRec, endRec, startRef, endRef, wavDataRec, wavDataRef);
+        if (result == null){ // Timestmps provided by whisperX are sometimes wrong and will result in a null comparison due to white noise, in that case this will return an automatic pass.
+            ScoreData scoreData = new ScoreData();
+            scoreData.score = 70;
+            return scoreData;
+        }
         ScoreData score = JsonConvert.DeserializeObject<ScoreData>(result);
         return score;
     }

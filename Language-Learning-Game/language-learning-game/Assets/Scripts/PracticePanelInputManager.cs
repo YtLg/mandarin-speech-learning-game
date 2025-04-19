@@ -56,8 +56,8 @@ public class PracticePanelInputManager : MonoBehaviour
 
     public void SpeechCompleted(AnalysisData analysisData, AudioClip recordedClip)
     {
-        recordButtonText.text = "Press to Start Recording";
         practicePanelOutputManager.SetupDisplayOutputPanel(analysisData, recordedClip, transcriptButtonData1.textAudio, transcriptButtonData1);
+        recordButtonText.text = "Press to Start Recording";
         practicePanel.SetActive(false);
     }
 
@@ -69,7 +69,7 @@ public class PracticePanelInputManager : MonoBehaviour
         {
             Debug.Log("Recording Started!");
             speechInputManager.StartRecording();
-            recordButtonText.text = "Press to Start Recording";
+            recordButtonText.text = "Press to End Recording";
 
         }
         else
@@ -82,8 +82,8 @@ public class PracticePanelInputManager : MonoBehaviour
             AnalysisData analysisData = await speechInputManager.SendAnalysisAudio(transcriptButtonData1, recordedBytes);
             if (analysisData == null)
             {
-                Debug.Log("NULL ITEM");
                 recordButtonText.text = "Press to Start Recording";
+
             }
             SpeechCompleted(analysisData, recordedClip);
         }

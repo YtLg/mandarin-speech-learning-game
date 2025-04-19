@@ -6,12 +6,12 @@ using System.Globalization;
 public class ApiManager : MonoBehaviour
 {
     // Internal test PC IP
-    //private readonly string urlWhisper = "http://127.0.0.1:8000"; // No modifying the URL outside of editor.
-    //private readonly string urlParsel = "http://127.0.0.1:8001";
+    private readonly string urlWhisper = "http://127.0.0.1:8000"; // No modifying the URL outside of editor.
+    private readonly string urlParsel = "http://127.0.0.1:8001";
 
     // Local Network IP
-    private readonly string urlWhisper = "http://192.168.115.215:8000"; // No modifying the URL outside of editor.
-    private readonly string urlParsel = "http://192.168.115.215:8001";
+    //private readonly string urlWhisper = "http://192.168.225.215:8000"; // No modifying the URL outside of editor.
+    //private readonly string urlParsel = "http://192.168.225.215:8001";
 
 
     // SENDS AND RECIEVES REQUESTS TO/FROM WHISPER API
@@ -91,8 +91,8 @@ public class ApiManager : MonoBehaviour
         Debug.Log("Entering Get Score API");
         string url = $"{urlParsel}/getScore" + $"?timestampStartRec={UnityWebRequest.EscapeURL(startRec.ToString(CultureInfo.InvariantCulture))}"
             + $"&timestampEndRec={UnityWebRequest.EscapeURL(endRec.ToString(CultureInfo.InvariantCulture))}" 
-            + $"&timestampStartRef={UnityWebRequest.EscapeURL(startRec.ToString(CultureInfo.InvariantCulture))}"
-            + $"&timestampEndRef={UnityWebRequest.EscapeURL(endRec.ToString(CultureInfo.InvariantCulture))}";
+            + $"&timestampStartRef={UnityWebRequest.EscapeURL(startRef.ToString(CultureInfo.InvariantCulture))}"
+            + $"&timestampEndRef={UnityWebRequest.EscapeURL(endRef.ToString(CultureInfo.InvariantCulture))}";
             WWWForm form = new();
             form.AddBinaryData("recFile", recAudio, "recAudio.wav", "audio/wav");
             form.AddBinaryData("refFile", refAudio, "refAudio.wav", "audio/wav");

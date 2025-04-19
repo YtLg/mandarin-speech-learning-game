@@ -76,8 +76,8 @@ public class SpeechPanelManager : MonoBehaviour
     public void SpeechCompleted(WhisperData transcriptData, AudioClip recordedSpeech, WhisperData referenceData)
     {
         Debug.Log("Speech Completed!");
-        recordButtonText.text = "Press to Start Recording";
         outputPanelManager.SetupDisplayOutputPanel(transcriptData, recordedSpeech, referenceData, selectedChoiceData.choiceAudio, objectOrNPC);
+        recordButtonText.text = "Press to Start Recording";
         dialoguePanel.SetActive(false);
     }
 
@@ -99,13 +99,15 @@ public class SpeechPanelManager : MonoBehaviour
             Debug.Log("Stopped recording and data saved!");
             WhisperData transcriptData = await speechInputManager.SendRecordedAudio(recordedBytes);
             Debug.Log("Transcript data for recording done!");
-            if (transcriptData != null)
-            {
-                Debug.Log("NULL ITEM");
-                recordButtonText.text = "Press to Start Recording";
-            }
             WhisperData referenceData = await speechInputManager.SendReferenceAudio(selectedChoiceData.choiceAudio);
             Debug.Log("Transcript data for reference done!");
+
+            if (transcriptData == null || referenceData == null)
+            {
+                recordButtonText.text = "Press to Start Recording";
+
+            }
+
             SpeechCompleted(transcriptData, recordedClip, referenceData);
         }
     }

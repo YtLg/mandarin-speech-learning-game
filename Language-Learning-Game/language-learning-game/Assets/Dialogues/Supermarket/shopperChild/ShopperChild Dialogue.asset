@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9e3b0ff48f783147ab5b832b5b9302b, type: 3}
   m_Name: ShopperChild Dialogue
   m_EditorClassIdentifier: 
-  npcName: "Child(\u5B69\u5B50)"
+  npcName: Young Shopper
   dialogueElementList:
   - englishText: 'Hello '
     pinyinText: "N\u01D0 h\u01CEo "

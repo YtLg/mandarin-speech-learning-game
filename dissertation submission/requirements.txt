@@ -1,0 +1,14 @@
+chinese_converter==1.1.1
+deep_translator==1.11.4
+dragonmapper==0.3.0
+fastapi==0.115.12
+matplotlib==3.10.1
+noisereduce==3.0.3
+numpy==2.2.4
+parselmouth==1.1.1
+pydub==0.25.1
+scipy==1.15.2
+torch==2.6.0+cu118
+uvicorn==0.34.2
+whisperx==3.3.1
+ctranslate2==3.24.0
