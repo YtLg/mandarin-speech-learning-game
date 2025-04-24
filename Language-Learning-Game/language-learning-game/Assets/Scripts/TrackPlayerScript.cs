@@ -7,12 +7,13 @@ public class TrackPlayerScript : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        head = Camera.main?.transform;
+        head = Camera.main.transform;
     }
 
     // Update is called once per frame
     void Update()
     {
+        //Sets the menu to always face the player's camera, by updating where it's faced every frame.
         menu.transform.LookAt(new Vector3(head.position.x, menu.transform.position.y, head.position.z));
         menu.transform.forward *= -1;
     }

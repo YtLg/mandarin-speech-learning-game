@@ -36,6 +36,7 @@ public class ObjectPanelManager : MonoBehaviour
 
     }
 
+    // sets up the display elements of the object panel.
     public void ShowCanvas(Transform objectTransform, Vector3 offset, Vector3 magnitudeOffset, ObjectDataScript objectData)
     {
         currentLanguageID = 0;

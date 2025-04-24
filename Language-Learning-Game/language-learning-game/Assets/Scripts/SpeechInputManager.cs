@@ -23,6 +23,7 @@ public class SpeechInputManager : MonoBehaviour
         recordedSpeech = Microphone.Start(null, false, maxRecLength, 44100);
     }
 
+    // Stops the recording and returns the byte array of the audio, and the audio clip.
     public (byte[], AudioClip) StopRecording() // Ends the recording and does post-recording processing.  
     {
         Debug.Log("Ended!");
@@ -44,6 +45,7 @@ public class SpeechInputManager : MonoBehaviour
         return (bytes, recordedSpeech);  
     }
 
+    // Sends the recorded audio to the API and returns the data.
     async public Task<WhisperData> SendRecordedAudio(byte[] recordedAudio)
     {
         var result = await apiManager.SendAudio(recordedAudio);
@@ -51,17 +53,8 @@ public class SpeechInputManager : MonoBehaviour
 
         await apiManager.SaveAudio((data.transcription + "Whisper"), recordedAudio);
 
-        //File.WriteAllBytes(data.transcription+"Whisper.wav", recordedAudio);
-
 
         return (data);
-
-        //Debug.Log("Transription is:" + data.transcription);
-
-        //foreach (WordData word in data.words)
-        //{
-        //    Debug.Log($"Word: {word.word}, Start: {word.start}, End: {word.end}, Probability: {word.probability}");
-        //}
     }
     
     // Sends reference + recording audio data to API for analysis + feedback.   
@@ -98,6 +91,7 @@ public class SpeechInputManager : MonoBehaviour
         return data;
     }
 
+    // Sends the relevant information to the API, to evaluate score of a character for the output
     async public Task<ScoreData> SendScoreEvaluation(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
     {
         float[] samplesRec = new float[recAudio.samples * recAudio.channels];
@@ -147,6 +141,9 @@ public class SpeechInputManager : MonoBehaviour
         return memoryStream.ToArray();
     }
 }
+
+
+// DATA CLASSES - USED TO CONVERT JSON INTO A READABLE UNITY CLASS FORMAT.
 
 public class WhisperData
 {

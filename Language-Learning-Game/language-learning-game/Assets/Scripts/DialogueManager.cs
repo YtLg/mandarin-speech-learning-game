@@ -29,6 +29,7 @@ public class DialogueManager : MonoBehaviour
     public Button continueButton;
     private Button exitButton;
     public Button replayButton;
+    public Button translateButton;
 
     //--- DIALOGUE DATA STORE ---//
     private DialogueElementsScript currentDialogue;
@@ -58,6 +59,7 @@ public class DialogueManager : MonoBehaviour
         // Set up Button Listeners
         replayButton.onClick.AddListener(ReplayButtonPressed);
         continueButton.onClick.AddListener(ContinueButtonPressed);
+        translateButton.onClick.AddListener(TranslateButtonPressed);
 
     }
 

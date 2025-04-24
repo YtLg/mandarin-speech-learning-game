@@ -57,10 +57,10 @@ MonoBehaviour:
     dialogueAudio: {fileID: 8300000, guid: d504871737751d849b4d3d2eaa746265, type: 3}
     hasChoice: 1
     choices:
-    - englishChoice: Ok!
-      pinyinChoice: "H\u01CEo de"
-      chineseChoice: " \u597D\u7684!"
-      choiceAudio: {fileID: 8300000, guid: 742a51c80d6a8ef4f8967c6caf399115, type: 3}
+    - englishChoice: Goodbye!
+      pinyinChoice: "Z\xE0iji\xE0n!"
+      chineseChoice: "\u518D\u89C1!"
+      choiceAudio: {fileID: 8300000, guid: d504871737751d849b4d3d2eaa746265, type: 3}
     nextElementID: 04000000
   - englishText: ...
     pinyinText: ...

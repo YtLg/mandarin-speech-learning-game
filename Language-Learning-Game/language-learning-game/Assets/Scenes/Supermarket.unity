@@ -2627,6 +2627,7 @@ MonoBehaviour:
   choicePanel: {fileID: 1797141350}
   continueButton: {fileID: 320901895}
   replayButton: {fileID: 1772370074}
+  translateButton: {fileID: 258413810}
   choiceArea: {fileID: 420564974}
   choiceButtonPrefab: {fileID: 6359961463602199426, guid: cb964f70028c46c4e985280e087a5c27, type: 3}
   speechPanelManager: {fileID: 1727731620}
@@ -3727,19 +3728,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 258413811}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: DialogueManager, Assembly-CSharp
-        m_MethodName: TranslateButtonPressed
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &258413811
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5601,7 +5590,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 420564974}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
@@ -5610,14 +5599,12 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 1
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 500, y: 120}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 0
+  m_ConstraintCount: 2
 --- !u!1 &423527659
 GameObject:
   m_ObjectHideFlags: 0
@@ -13488,7 +13475,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 183710288}
         m_TargetAssemblyTypeName: DialogueManager, Assembly-CSharp
         m_MethodName: EndDialogue
         m_Mode: 1
@@ -24023,9 +24010,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2114155934}
   - {fileID: 1032812900}
   - {fileID: 1844428048}
-  - {fileID: 2114155934}
   - {fileID: 1342956702}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -27159,6 +27146,7 @@ MonoBehaviour:
   speechInputManager: {fileID: 477994858}
   outputPanelManager: {fileID: 1899772946}
   dialogueManager: {fileID: 183710288}
+  objectPanelManager: {fileID: 0}
 --- !u!4 &1727731621
 Transform:
   m_ObjectHideFlags: 0

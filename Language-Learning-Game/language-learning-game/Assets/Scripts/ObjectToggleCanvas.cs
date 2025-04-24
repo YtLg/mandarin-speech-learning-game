@@ -30,7 +30,8 @@ public class ObjectToggleCanvas : MonoBehaviour
         held = false;
         letGo = false;
     }
-    // Update is called once per frame
+    
+    // Displays the objectPanel if the object has been interacted with.
     public void ToggleCanvas()  
     {
         held = true;
@@ -44,12 +45,14 @@ public class ObjectToggleCanvas : MonoBehaviour
         objectPanelManager.ShowCanvas(this.transform, offset, magnitudeOffset, objectDataScript);
     }
 
+    // used to track if it's being held or not, being referenced from inspector.
     public void LetGo()
     {
         held = false;
         letGo = true;
     }
 
+    // Timeout timer function.
     public void FixedUpdate()
     {
         if (held == false && letGo == true)
@@ -63,7 +66,7 @@ public class ObjectToggleCanvas : MonoBehaviour
         }
     }
 
-
+    // Makes it so the object return to its original position after being grabbed or flung, after a timeout.
     private void returnToPosition()
     {
         transform.position = originalPosition;

@@ -6,6 +6,7 @@ public class ObjectDataScript : ScriptableObject
 {
     public ObjectData objectData;
 
+    // Used as the data to populate the objectPanel template.
     [System.Serializable]
     public class ObjectData
     {

@@ -14,6 +14,7 @@ public class ButtonDataScript : MonoBehaviour
     private DialogueManager dialogueManager;
     private Button button;
 
+    // The script attached to each choice button prefab and contains the data from each choiceElement
     private void Start()
     {
         button = GetComponent<Button>();

@@ -33,6 +33,7 @@ public class SpeechPanelManager : MonoBehaviour
     public SpeechInputManager speechInputManager;
     public OutputPanelManager outputPanelManager;
     public DialogueManager dialogueManager;
+    public ObjectPanelManager objectPanelManager;
 
     int currentLanguageID;
 
@@ -52,6 +53,7 @@ public class SpeechPanelManager : MonoBehaviour
         recordButtonText = recordButton.GetComponentInChildren<TextMeshProUGUI>();
     }
 
+    // Called to set up all the relevant display content on the panel.
     public void DisplaySpeechPanel(ButtonDataScript buttonData, int type)
     {
         currentLanguageID = 0;
@@ -63,16 +65,13 @@ public class SpeechPanelManager : MonoBehaviour
         objectOrNPC = type;
     }
 
+    // called from other panels to unhide this panel.
     public void ShowSpeechPanel()
     {
         dialoguePanel.SetActive(true);
     }
 
-    public void ResetSpeechPanel()
-    {
-        // implementation to wipe and reset data.
-    }
-
+    // Sends speech data to the output panel and hides this panel.
     public void SpeechCompleted(WhisperData transcriptData, AudioClip recordedSpeech, WhisperData referenceData)
     {
         Debug.Log("Speech Completed!");
@@ -84,9 +83,10 @@ public class SpeechPanelManager : MonoBehaviour
 
     // ---- Button Press Listeners ----
 
+    // Handles start and end recording presses, sends speech input + reference to API.
     async void RecordButtonPressed()
     {
-        if (!speechInputManager.isRecording) // False vs ! for readability.
+        if (!speechInputManager.isRecording)
         {
             speechInputManager.StartRecording();
             recordButtonText.text = "Press to Stop Recording";
@@ -112,6 +112,7 @@ public class SpeechPanelManager : MonoBehaviour
         }
     }
 
+    // translates the text to the language ID and increments ID by 1  to keep it cycling.
     void TranslateButtonPressed()
     {
         if (currentLanguageID >= 2) // wraps around back to 0 if on 2 or above.
@@ -126,19 +127,29 @@ public class SpeechPanelManager : MonoBehaviour
         ChangeDisplayText(currentLanguageID);
     }
 
+    // replays the refence audio
     void ReplayButtonPressed()
     {
         audioManager.PlayDialogue(selectedChoiceData.choiceAudio);
     }
 
+    // goes back to the panel that led to this panel. Object panel or dialogue panel.
     private void BackButtonPressed()
     {
         dialoguePanel.SetActive(false);
-        dialogueManager.DisplayThePanel();
+        if (objectOrNPC == 0)
+        {
+            dialogueManager.DisplayThePanel();
+        }
+        else
+        {
+            objectPanelManager.ShowObjectPanel();
+        }
     }
 
     // -- HELPER FUNCTIONS ---
 
+    // changes display text based on ID passed into it.
     public void ChangeDisplayText(int langID)
     {
         if (langID == 0)
@@ -156,9 +167,9 @@ public class SpeechPanelManager : MonoBehaviour
 
     }
 
+    // removes, punctuation and spaces and lowercases the argument.
     public string CleanText(string text)
     {
-        // Remove punctuation, make the text lowercase, and remove spaces
         return Regex.Replace(text.ToLower(), @"[^\w]", "");
     }
 

@@ -233,7 +233,6 @@ public class OutputPanelManager : MonoBehaviour
     {
         outputPanel.SetActive(false);
         speechPanelManager.ShowSpeechPanel();
-        // TODO: Call some function in SpeechPanelManager to make it appear again, then hide this panel.
     }
 
     void ContinuePressed()            
@@ -262,25 +261,8 @@ public class OutputPanelManager : MonoBehaviour
 
     //--- HELPER FUNCTIONS ---//
 
-    public string CleanMandarinText(string text) // removes punctuation and spaces for comparative purposes.
-    {
-        string pattern = @"[，。？！、；：“”‘’（）《》【】…—·\sA-Za-z]";
-        string cleanedText = Regex.Replace(text, pattern, "");
-        return cleanedText;
-    }
 
-    public (float,int) CheckString(WordData ideal, WordData recording)
-    {
-    string idealText = CleanMandarinText(ideal.word);
-    string recordedText = CleanMandarinText(recording.word);
-        if (idealText.Contains(recordedText) || recordedText.Contains(idealText))
-        {
-            recording.probability += (float)0.001;
-            return (recording.probability/ideal.probability, 0);
-        }
-        return (0, -1);
-    }
-
+    // Sends the recording and reference audio + the character timestamps for scoring to the speechInputManager, which sends it to the API.
     async Task<ScoreData> SendScoreData(float startRec, float endRec, float startRef, float endRef, AudioClip recAudio, AudioClip refAudio)
     {
         if (recAudio == null)

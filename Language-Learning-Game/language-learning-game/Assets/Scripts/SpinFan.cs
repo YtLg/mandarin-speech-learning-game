@@ -2,15 +2,11 @@ using UnityEngine;
 
 public class SpinFan : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
     void Update()
     {
+        // rotates it a lot to make it look spinning
         transform.Rotate(0, 0, 5);
     }
 }

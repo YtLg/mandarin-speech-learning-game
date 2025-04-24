@@ -18,17 +18,19 @@ public class TranscriptButtonData : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // finds relevant objects
         button = GetComponent<Button>();
         outputPanelManager = FindFirstObjectByType<OutputPanelManager>();
         button.onClick.AddListener(() => outputPanelManager.TranscriptButtonPressed(gameObject));
     }
-
+    // called to set the text of this particular button
     public void SetText()
     {
         textComponent.text = buttonTextData;
         SetColour();
     }
 
+    // sets the colour of the text based on the score given to the button.
     public void SetColour()
     {
         float percent = CalcPercentage(actualProb, expectedProb);
@@ -56,6 +58,7 @@ public class TranscriptButtonData : MonoBehaviour
 
     }
 
+    // used to calculate percentage score for the colouring
     public float CalcPercentage(float a, float b)
     {
         float temp = a / b;

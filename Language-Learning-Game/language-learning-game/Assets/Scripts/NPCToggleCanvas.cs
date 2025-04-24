@@ -16,7 +16,8 @@ public class NPCToggleCanvas : MonoBehaviour
     public Vector3 offset4Mag = new(0f, 0f, 0f);
 
 
-    // Update is called once per frame
+    // When the VR headset grabs the object, it will call dialogue manager to set up the dialogue and pass in the associated NPC's dialogue script
+    // and also resets the visibility of the UI anels.
     public void ToggleCanvas()
     {
         dialogueManager.ShowCanvas(gameObject, transform, offset, offset4Mag, npcDialogueElements);

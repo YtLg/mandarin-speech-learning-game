@@ -2,6 +2,9 @@ using Unity.XR.CoreUtils;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController)), RequireComponent(typeof(XROrigin))]
+
+// CREDITS: https://discussions.unity.com/t/xri-3-0-keep-player-from-going-through-walls/949590
+// Solution to prevent player from phasing through solid objects when using XR device simulator, as it uses camera movement and not player movement.
 public class WallPreventer : MonoBehaviour
 {
     CharacterController m_CharacterController;
@@ -20,6 +23,8 @@ public class WallPreventer : MonoBehaviour
 
     void Update()
     {
+
+
         // Set the Character Controller's center to the local position of the head transform on X and Z.
         m_CharacterController.center = new Vector3(m_LocalHeadTransform.localPosition.x, m_CharacterController.center.y, m_LocalHeadTransform.localPosition.z);
 

@@ -86,8 +86,8 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
     minMaxRecordingFlatten = flattenValues(minMaxRecording, interpolatedRecordingResampled, 30)
     minMaxReferenceFlatten = flattenValues(minMaxReference, interpolatedReferenceResampled, 30)
     # Gets the datapoints that differ too much past a given threshold.
-    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.25)
-    
+    allMajorDifferences, relevantDifferences = getDifferences(minMaxReferenceFlatten, minMaxRecordingFlatten, 0.225)
+
     # Uses that to compute the percentage of incorrect datapoints to overall datapoints to get % accuracy.
     score = getCorrectness(allMajorDifferences, minMaxRecordingFlatten)
 
@@ -114,22 +114,14 @@ async def analyseAudio(timestampStart: float, timestampEnd: float, referenceFile
                 feedback.append(i)
 
         if len(feedback) == 0: # fallback to segmented feedback if it doesn't provide any feedback from deviation based.
-            feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimes, minMaxRecordingFlattenCopy, recordingTimes, score)
+            feedback = compareToneTrends(minMaxReferenceFlattenCopy, referenceTimesResampled, minMaxRecordingFlattenCopy, referenceTimesResampled, score)
     else:
         feedback.append("Well done! Your tone is very close to the reference!")
+   
     # Collapse relevant deviations back into 1d array.
     relevantDeviationsCollapsed = []
     for i in relevantDeviations:
         relevantDeviationsCollapsed += i
-
-
-    all_pitch3 = np.concatenate([minMaxRecordingFlatten, minMaxReferenceFlatten])
-    ymin = np.nanmin(all_pitch3) * 0.9
-    ymax = np.nanmax(all_pitch3) * 1.1
-    draw_pitch(minMaxRecordingFlatten, recordingTimesResampled, ymin, ymax)
-    draw_pitch2(minMaxReferenceFlatten, referenceTimesResampled, ymin, ymax)
-    plt.savefig("plot.png")
-    plt.show()
 
     # Need to return: pitches / times / major differences
     analysisResult = {
@@ -208,25 +200,6 @@ async def getScore(timestampStartRec: float, timestampEndRec: float, timestampSt
     print("Score is", score)
     return {"score": score }
 
-
-# --------- Graphing functions for compiling audio data ----------
-def draw_pitch(pitchValues, times, ymin, ymax):
-    times -= times[0]
-    plt.plot(times, pitchValues, '-', markersize=5, color='w')
-    plt.plot(times, pitchValues, '-', markersize=5, label='recording')
-    plt.grid(False)
-    plt.ylim(ymin, ymax)  # Use pre-computed limits
-    plt.ylabel("Pitch Value")
-    plt.xlabel("Time")
-
-def draw_pitch2(pitchValues, times, ymin, ymax):
-    times -= times[0]
-    plt.plot(times, pitchValues, '-', markersize=5, color='w')
-    plt.plot(times, pitchValues, '-', markersize=2, color='black', label='reference')
-    plt.ylim(ymin, ymax)  # Same limits as draw_pitch
-    plt.legend()
-
-
 # ----------- HELPER FUNCTIONS -----------
 
 def fileToPitch(filepath):
@@ -263,6 +236,7 @@ def interpolateValues(pitchValues, times):
 
     return pitchValues, times
 
+# Resamples the shortest of the two pitch value arrays.
 def resampleShortest(pitchValuesA, timesa, pitchValuesB, timesb):
     if(len(pitchValuesA > len(pitchValuesB))):
         temp = pitchValuesB
@@ -279,18 +253,21 @@ def resampleShortest(pitchValuesA, timesa, pitchValuesB, timesb):
 
     return pitchValuesA, timesa, pitchValuesB, timesb
 
+# noramlises data to the same scale via minmax
 def minMaxNormalise(pitchA):
     maxVal = max(pitchA)
     minVal = min(pitchA)
     normalisedA = (pitchA- minVal) / (maxVal - minVal)
     return normalisedA
 
+# flattens pitch array if its highest and lowest value are within the threshold.
 def flattenValues(normalisedValues, originalvalues, flattenThreshold):
     if max(originalvalues) - min(originalvalues) <= flattenThreshold:
         for i in range(len(normalisedValues)):
             normalisedValues[i] = ((normalisedValues[i] - 0.5) * 0.1) + 0.5
     return normalisedValues
 
+# Gets and returns all the deviations and relevant deviations
 def getDifferences(pitchA, pitchB, threshold=0.25):
     pitchDifferences = pitchA - pitchB
     
@@ -310,12 +287,14 @@ def getDifferences(pitchA, pitchB, threshold=0.25):
     # Returns all the indexes, the relevant indexes
     return bigDifferencesIndexes, groupedDiffIndexes
 
+# calculates the /100 score from the deviations.
 def getCorrectness(majorDeviations,recordingValues):
     if len(majorDeviations) == 0:
         return 100
     errorRate = len(majorDeviations) / len(recordingValues)*100
     return 100-errorRate
 
+# Grouping functions to get relevant deviations
 def groupByConsequtive(diffIndexes):
     diffIndexes = [int(x) for x in diffIndexes] # Fix formatting issue
     groupedArr = [[diffIndexes[0]]]
@@ -432,9 +411,9 @@ def detectTrend(indexArray, dataArray, originalData, order=1):
 
 # Converts the data gotten from detectTrend + getTrend into word feedbck.
 def numTrendToString(trendVal):
-    if trendVal >= 0.001: # > 0.1 ranges is rising slope.
+    if trendVal > 0.003: # > 0.1 ranges is rising slope.
         trend = "rising"
-    elif abs(trendVal) < 0.001: #0.1 ranges is a relatively maintaining/flat slope.
+    elif abs(trendVal) < 0.003: #0.1 ranges is a relatively maintaining/flat slope.
         trend = "maintaining"
     else:
         trend = "dropping" # lower than -0.1 is decreasing slope.
@@ -445,7 +424,6 @@ def segmentData(data, segements):
     return list((data[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(segements)))
 
 # FEEDBACK GENERATORS
-
 def generateFeedback(referenceTrends,recordingTrends):
     feedback = []
     

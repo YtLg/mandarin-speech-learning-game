@@ -18,12 +18,14 @@ public class AudioManager : MonoBehaviour
         PlayMusic();
     }
 
+    // plays the background music
     void PlayMusic()
     {
         musicSource.volume = 0.02f;
         musicSource.Play();
     }
 
+    // stops background music
     public void StopMusic()
     {
         musicSource.Stop();
@@ -46,6 +48,7 @@ public class AudioManager : MonoBehaviour
         voiceSource.Stop();
     }
 
+    // plays a specific segment of the audio provided.
     public void PlaySegment(AudioClip dialogue, float start, float end)
     {
         voiceSource.clip = dialogue;
@@ -59,8 +62,7 @@ public class AudioManager : MonoBehaviour
         segmentStopCoroutine = StartCoroutine(StopTimer(end - start));
     }
 
-    // For playing and stopping non-speech sound effects to avoid interrupt.
-
+    // For playing and stopping non-speech sound effects to avoid interrupt, not implemented due to timescales.
     public void PlaySoundEffect(AudioClip sfx)
     {
         sfxSource.PlayOneShot(sfx);

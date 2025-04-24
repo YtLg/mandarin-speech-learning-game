@@ -31,7 +31,10 @@ public class PracticePanelInputManager : MonoBehaviour
     
     void Start()
     {
+        // hides the panel on startup
         practicePanel.SetActive(false);
+
+        // sets up button listeners
         replayButton.onClick.AddListener(ReplayButtonPressed);
         recordButton.onClick.AddListener(RecordButtonPressed);
         translateButton.onClick.AddListener(TranslateButtonPressed);
@@ -39,6 +42,7 @@ public class PracticePanelInputManager : MonoBehaviour
         recordButtonText = recordButton.GetComponentInChildren<TextMeshProUGUI>();
     }
 
+    // sets up the display elements of the panel with the correct information that was passed in
     public void SetupPanel(TranscriptButtonData transcriptButtonData)
     {
         transcriptButtonData1 = transcriptButtonData;
@@ -49,11 +53,13 @@ public class PracticePanelInputManager : MonoBehaviour
         practicePanel.SetActive (true);
     }
 
+    // unhides the panel.
     public void ShowPanel()
     {
         practicePanel.SetActive (true);
     }
 
+    // Sends the data to the output panel after speech input is completed.
     public void SpeechCompleted(AnalysisData analysisData, AudioClip recordedClip)
     {
         practicePanelOutputManager.SetupDisplayOutputPanel(analysisData, recordedClip, transcriptButtonData1.textAudio, transcriptButtonData1);
@@ -63,6 +69,8 @@ public class PracticePanelInputManager : MonoBehaviour
 
     // -------- BUTTON HANDLERS --------
 
+
+    // Handles start and stopping recording + sending audio to the API and recieving the returned output.
     async void RecordButtonPressed()
     {
         if (!speechInputManager.isRecording) // False vs ! for readability.

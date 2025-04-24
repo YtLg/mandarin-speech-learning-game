@@ -3,10 +3,11 @@ using UnityEngine.UI;
 using System.Text;
 using TMPro;
 
+
+// Displays the debug logs onto a panel, needed because there were VR headset only issues that I couldn't see the debug log of and fix.
 public class DebugConsole : MonoBehaviour
 {
-    public TextMeshProUGUI debugText; // Assign this via the Inspector
-    public ScrollRect scrollRect; // Optional: to auto-scroll the view
+    public TextMeshProUGUI debugText; 
     private StringBuilder logBuilder = new StringBuilder();
 
     void OnEnable()
@@ -26,9 +27,6 @@ public class DebugConsole : MonoBehaviour
         {
             debugText.text = logBuilder.ToString();
 
-            // Optional: Auto-scroll to bottom if using a ScrollRect
-            Canvas.ForceUpdateCanvases();
-            scrollRect.verticalNormalizedPosition = 0f;
         }
     }
 }

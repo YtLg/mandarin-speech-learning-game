@@ -37,6 +37,9 @@ public class ApiManager : MonoBehaviour
             return null;
         }
     }
+
+
+    // Sends the input and reference to the audio analysis pipeline and returns the out9p9ut9.9
     public async Task<string> AnalyseAudio(float start, float end, byte[] reference, byte[] recording)
     {
         string url = $"{urlParsel}/analyseAudio"+ $"?timestampStart={UnityWebRequest.EscapeURL(start.ToString(CultureInfo.InvariantCulture))}"
@@ -66,6 +69,7 @@ public class ApiManager : MonoBehaviour
         }
     }
 
+    // saves the audio for user study purposes.
     public async Task SaveAudio(string filename, byte[] file)
     {
         string url = $"{urlWhisper}/saveAudio?filename={UnityWebRequest.EscapeURL(filename)}";
@@ -86,6 +90,8 @@ public class ApiManager : MonoBehaviour
         }
     }
 
+
+    // Used to get the score of each button prefab generated after speaking a phrase.
     public async Task<string> GetScore(float startRec, float endRec, float startRef, float endRef, byte[] recAudio, byte[] refAudio)
     {
         Debug.Log("Entering Get Score API");
@@ -114,6 +120,7 @@ public class ApiManager : MonoBehaviour
             }
     }
 
+    // Used to get the pinyin and english translations of individual characters
     public async Task<string> TranslateCharacter(string character)
     {
         string url = $"{urlWhisper}/getTranslations" + $"?character={UnityWebRequest.EscapeURL(character)}";
@@ -138,5 +145,4 @@ public class ApiManager : MonoBehaviour
         }
     }
 
-    // SENDS AND RECIEVES REQUESTS TO/FROM PARSELMOUTH API
 }

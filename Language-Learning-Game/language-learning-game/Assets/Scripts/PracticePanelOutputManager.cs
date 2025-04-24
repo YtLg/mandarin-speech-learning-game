@@ -106,6 +106,8 @@ public class PracticePanelOutputManager : MonoBehaviour
         xAxis.axisName.labelStyle.textStyle.fontSize = 25;
         xAxis.axisName.labelStyle.textStyle.fontStyle = FontStyle.Bold;
 
+
+        // Populates the graph with recording pitch values.
         Serie serie1 = lineChart.AddSerie<Line>("Recording Pitch");
         serie1.symbol.show = true;
         serie1.stack = "PitchStack1";
@@ -121,6 +123,7 @@ public class PracticePanelOutputManager : MonoBehaviour
             }
         }
 
+        // Populates the graph with reference pitch values.
         Serie serie2 = lineChart.AddSerie<Line>("Reference Pitch");
         serie2.stack = "PitchStack2";
         for (int i = 0; i < analysisData.pitchReference.Length; i++)

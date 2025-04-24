@@ -61,18 +61,20 @@ async def getTranslations(character: str):
     wordTranslations  = {"pinyin":pinyinWord, "english":englishWord}
     return wordTranslations
 
+# Saves the audio
 @app.post("/saveAudio")
 async def saveAudio(filename: str, file: UploadFile = File(...)):
     
-    uploadedAudio = await file.read()
+    # COMMENTED OUT TO AVOID CLUTTER.
+    # uploadedAudio = await file.read()
     
-    counter = 1
-    while(os.path.isfile(name+filename+str(counter)+".wav")):
-        counter +=1 
+    # counter = 1
+    # while(os.path.isfile(name+filename+str(counter)+".wav")):
+    #     counter +=1 
 
-    with open(name + filename+str(counter)+".wav", "wb") as f:
-        f.write(uploadedAudio)
-        f.close
+    # with open(name + filename+str(counter)+".wav", "wb") as f:
+    #     f.write(uploadedAudio)
+    #     f.close
     return {"message": "Saved!"}
 
 # ------------- AUDIO PROCESSING FUNCTIONS --------------------
